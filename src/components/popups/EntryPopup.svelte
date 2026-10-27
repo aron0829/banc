@@ -4,6 +4,7 @@
   import { categoryOf, groupOf, visibleCategories, type Entry } from '../../lib/model';
   import { amountInput, parseAmount } from '../../lib/money';
   import { addEntry, deleteEntry, updateEntry } from '../../lib/ops';
+  import { amountAllowed } from '../../lib/rules';
   import { SCOPES } from '../../lib/scopes';
   import { app, commit } from '../../lib/sync.svelte';
   import { closePopup, openPopup } from '../../lib/ui.svelte';
@@ -33,7 +34,7 @@
   const group = $derived(groupOf(data, groupId));
   const amount = $derived(parseAmount(amountText));
   const missingGroup = $derived(!!category?.requiresGroup && (!group || group.deleted));
-  const valid = $derived(amount !== null && !!category && !category.deleted && !missingGroup);
+  const valid = $derived(amountAllowed(scope, amount) && !!category && !category.deleted && !missingGroup);
   const tone = $derived(SCOPES[scope].tone);
   const title = $derived(scope === 'expense' ? SCOPES.expense.title : `Übersicht ${yearOf(date)}`);
 
@@ -86,7 +87,7 @@
     </div>
   </Field>
 
-  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && amount === null}>
+  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && !amountAllowed(scope, amount)}>
     <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" />&nbsp;€
   </Field>
 

@@ -2,7 +2,8 @@ import { monthOf, todayDay } from './dates';
 import { defaultData, type Data } from './model';
 import { profileName } from './profile';
 import { Saver, type SaveResult } from './saver';
-import { supabase } from './supabase';
+import { logout as authLogout, supabase } from './supabase';
+import { refreshToday } from './ui.svelte';
 
 const ERROR_NOTICE = 'Nicht gespeichert – erneuter Versuch';
 
@@ -82,6 +83,7 @@ export function commit(next: Data): void {
 
 async function setUser(id: string | null, email?: string) {
   if (id === app.userId) return;
+  saver.reset();
   app.userId = id;
   app.profile = profileName(email);
   app.data = null;
@@ -96,8 +98,20 @@ export async function init(): Promise<void> {
     setTimeout(() => setUser(session?.user.id ?? null, session?.user.email));
   });
   const refresh = () => {
-    if (document.visibilityState === 'visible' && !saver.busy) load();
+    if (document.visibilityState === 'hidden') {
+      saver.flushNow();
+      return;
+    }
+    refreshToday();
+    if (!saver.busy) load();
   };
+  setInterval(refreshToday, 60_000);
   document.addEventListener('visibilitychange', refresh);
   window.addEventListener('focus', refresh);
+}
+
+/** Saves what is pending, then signs out. */
+export async function logout(): Promise<void> {
+  await saver.flushNow();
+  await authLogout();
 }

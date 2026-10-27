@@ -1,5 +1,6 @@
 import type { Component } from 'svelte';
-import { monthOf, todayDay, yearOf, type Month } from './dates';
+import { monthOf, todayDay, yearOf, type Day, type Month } from './dates';
+import { rollToday } from './rules';
 
 export interface Popup {
   id: number;
@@ -8,6 +9,7 @@ export interface Popup {
 }
 
 class UI {
+  today = $state<Day>(todayDay());
   view = $state<'month' | 'overview'>('month');
   month = $state<Month>(monthOf(todayDay()));
   year = $state(yearOf(todayDay()));
@@ -25,6 +27,14 @@ export function openPopup<P extends Record<string, unknown>>(component: Componen
 /** Closes the top-most popup. */
 export function closePopup(): void {
   ui.popups = ui.popups.slice(0, -1);
+}
+
+/** Keeps "today" correct when the app stays open over midnight. */
+export function refreshToday(): void {
+  const now = todayDay();
+  if (now === ui.today) return;
+  ui.month = rollToday(ui.today, now, ui.month);
+  ui.today = now;
 }
 
 export function closeAllPopups(): void {

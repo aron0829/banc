@@ -85,3 +85,40 @@ describe('Saver', () => {
     expect(saver.busy).toBe(false);
   });
 });
+
+describe('Saver flushNow / reset', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('flushNow saves a pending change immediately without waiting for the debounce', async () => {
+    const update = vi.fn(async (): Promise<SaveResult> => ({ ok: true, version: 2 }));
+    const saver = new Saver(update, () => ({ n: 1 }), { onConflict: vi.fn(), onError: vi.fn(), onSaved: vi.fn() }, 400, 5000);
+    saver.version = 1;
+    saver.schedule();
+    await saver.flushNow();
+    expect(update).toHaveBeenCalledOnce();
+    expect(saver.busy).toBe(false);
+  });
+
+  it('reset drops pending saves and retries (e.g. after logout)', async () => {
+    const update = vi.fn(async (): Promise<SaveResult> => ({ ok: false, conflict: false }));
+    const saver = new Saver(update, () => ({}), { onConflict: vi.fn(), onError: vi.fn(), onSaved: vi.fn() }, 400, 5000);
+    saver.version = 3;
+    saver.schedule();
+    await vi.advanceTimersByTimeAsync(400); // fails, retry scheduled
+    saver.reset();
+    await vi.advanceTimersByTimeAsync(20000);
+    expect(update).toHaveBeenCalledOnce();
+    expect(saver.busy).toBe(false);
+    expect(saver.version).toBe(0);
+  });
+
+  it('never sends a null document', async () => {
+    const update = vi.fn(async (): Promise<SaveResult> => ({ ok: true, version: 2 }));
+    const saver = new Saver(update, () => null, { onConflict: vi.fn(), onError: vi.fn(), onSaved: vi.fn() }, 400, 5000);
+    saver.schedule();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(update).not.toHaveBeenCalled();
+    expect(saver.busy).toBe(false);
+  });
+});

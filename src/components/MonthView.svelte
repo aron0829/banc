@@ -4,7 +4,7 @@
   import {
     balance, categoryEntriesForMonth, categoryTotal, expenses, income, limitHint, scopeEntriesForMonth, scopeTotal, usedPercent,
   } from '../lib/calc';
-  import { addMonths, fullDate, monthLabel, monthOf, todayDay, yearOf, type Day } from '../lib/dates';
+  import { addMonths, fullDate, monthLabel, monthOf, yearOf, type Day } from '../lib/dates';
   import { visibleCategories, type Data, type Entry } from '../lib/model';
   import { formatAmount } from '../lib/money';
   import { SCOPES } from '../lib/scopes';
@@ -17,7 +17,7 @@
 
   let { data }: { data: Data } = $props();
 
-  const today = $derived(todayDay());
+  const today = $derived(ui.today);
   const current = $derived(monthOf(today));
   const m = $derived(ui.month);
 

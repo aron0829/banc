@@ -2,7 +2,7 @@
   import { Calendar, House, RotateCcwClock, SlidersHorizontal } from '@lucide/svelte';
   import { editCategory, editEntry, newOneOff, openSettings } from '../lib/actions';
   import { overviewCategoryEntries, overviewCategoryTotal, overviewMonths, overviewTotal, previousYears } from '../lib/calc';
-  import { monthLabel, monthOf, todayDay, yearOf, type Day } from '../lib/dates';
+  import { monthLabel, monthOf, yearOf, type Day } from '../lib/dates';
   import { visibleCategories, type Data } from '../lib/model';
   import { formatAmount } from '../lib/money';
   import { SCOPES } from '../lib/scopes';
@@ -15,7 +15,7 @@
 
   let { data }: { data: Data } = $props();
 
-  const today = $derived(todayDay());
+  const today = $derived(ui.today);
   const thisYear = $derived(yearOf(today));
   const year = $derived(ui.year);
 

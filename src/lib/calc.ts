@@ -55,11 +55,21 @@ export function hasActivity(data: Data, m: Month): boolean {
   return (['income', 'fixed', 'invest', 'expense'] as Scope[]).some((s) => scopeEntriesForMonth(data, s, m).length > 0);
 }
 
+/** Profile start, moved back to the earliest expense entry so backfilled months count. */
+export function effectiveStart(data: Data): Month | undefined {
+  const firstExpense = entriesOfScope(data, 'expense')
+    .map((e) => monthOf(e.date!))
+    .sort()[0];
+  if (!data.start) return undefined;
+  return firstExpense && firstExpense < data.start ? firstExpense : data.start;
+}
+
 /** Months of the year up to today (and from the profile start) that have entries, with their balance. */
 export function overviewMonths(data: Data, year: number, today: Day): { month: Month; balance: number }[] {
   const now = monthOf(today);
+  const start = effectiveStart(data);
   return monthsOfYear(year)
-    .filter((m) => m <= now && (!data.start || m >= data.start) && hasActivity(data, m))
+    .filter((m) => m <= now && (!start || m >= start) && hasActivity(data, m))
     .map((m) => ({ month: m, balance: balance(data, m) }));
 }
 

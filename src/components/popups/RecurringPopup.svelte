@@ -4,6 +4,7 @@
   import { categoryOf, visibleCategories, type Entry, type Scope } from '../../lib/model';
   import { amountInput, parseAmount } from '../../lib/money';
   import { addEntry, deleteEntry, updateEntry } from '../../lib/ops';
+  import { amountAllowed } from '../../lib/rules';
   import { SCOPES } from '../../lib/scopes';
   import { app, commit } from '../../lib/sync.svelte';
   import { closePopup, openPopup } from '../../lib/ui.svelte';
@@ -29,7 +30,7 @@
   const amount = $derived(parseAmount(amountText));
   const category = $derived(categoryId ? categoryOf(data, categoryId) : undefined);
   const rangeOk = $derived(to === null || to >= from);
-  const valid = $derived(amount !== null && !!category && !category.deleted && rangeOk);
+  const valid = $derived(amountAllowed(scope, amount) && !!category && !category.deleted && rangeOk);
   const tone = $derived(SCOPES[scope].tone);
 
   const pickFrom = () => openPopup(MonthPicker, { title: 'Von', value: from, tone, onPick: (m: Month | null) => m && (from = m) });
@@ -70,7 +71,7 @@
     {/snippet}
   </Field>
 
-  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && amount === null}>
+  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && !amountAllowed(scope, amount)}>
     <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" />&nbsp;€
   </Field>
 

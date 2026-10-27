@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   balance, categoryTotal, expenses, groupedEntries, hasActivity, income, isActive, limitHint,
-  overviewCategoryTotal, overviewMonths, overviewTotal, ownYearResult, previousYears, scopeTotal, usedPercent,
+  effectiveStart, overviewCategoryTotal, overviewMonths, overviewTotal, ownYearResult, previousYears, scopeTotal, usedPercent,
 } from './calc';
 import type { Category, Data, Entry, Scope } from './model';
 
@@ -169,6 +169,17 @@ describe('groupedEntries', () => {
     expect(rows.map((r) => [r.group?.name ?? null, r.total, r.entries.map((e) => e.amount)])).toEqual([
       ['Group 1', 1200, [1000, 200]],
       [null, 500, [500]],
+    ]);
+  });
+});
+
+describe('backfilled months', () => {
+  it('moves the profile start back to the earliest expense entry', () => {
+    const d: Data = { ...base(), start: '2026-10' };
+    d.entries = [entry('job', 100000, { from: '2026-01', to: null }), entry('essen', 2000, { date: '2026-03-05' })];
+    expect(effectiveStart(d)).toBe('2026-03');
+    expect(overviewMonths(d, 2026, '2026-10-27').map((m) => m.month)).toEqual([
+      '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10',
     ]);
   });
 });

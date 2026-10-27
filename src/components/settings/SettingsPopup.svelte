@@ -3,8 +3,7 @@
   import type { Component } from 'svelte';
   import type { Scope } from '../../lib/model';
   import { SCOPES, type Tone } from '../../lib/scopes';
-  import { logout } from '../../lib/supabase';
-  import { app } from '../../lib/sync.svelte';
+  import { app, logout } from '../../lib/sync.svelte';
   import { closeAllPopups, closePopup, currentTheme, openPopup, setTheme, type Theme } from '../../lib/ui.svelte';
   import Modal from '../Modal.svelte';
   import RecurringSettings from './RecurringSettings.svelte';
