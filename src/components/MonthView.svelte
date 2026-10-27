@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Calendar, House, Lock, SlidersHorizontal, Sprout } from '@lucide/svelte';
+  import { House, Lock, SlidersHorizontal, Sprout } from '@lucide/svelte';
   import { editCategory, editEntry, newOneOff, openSettings } from '../lib/actions';
   import {
     balance, categoryEntriesForMonth, categoryTotal, expenses, income, limitHint, scopeEntriesForMonth, scopeTotal, usedPercent,
   } from '../lib/calc';
-  import { addMonths, fullDate, monthLabel, monthOf, yearOf, type Day } from '../lib/dates';
+  import { addMonths, monthLabel, monthOf, yearOf, type Day } from '../lib/dates';
   import { visibleCategories, type Data, type Entry } from '../lib/model';
   import { formatAmount } from '../lib/money';
   import { SCOPES } from '../lib/scopes';
@@ -21,10 +21,11 @@
   const current = $derived(monthOf(today));
   const m = $derived(ui.month);
 
-  let open = $state<'income' | 'expense' | null>('expense');
+  // Always exactly one of the two is open: tapping switches.
+  let open = $state<'income' | 'expense'>('expense');
   let openSub = $state<string | null>(null);
 
-  const toggle = (card: 'income' | 'expense') => (open = open === card ? null : card);
+  const toggle = () => (open = open === 'income' ? 'expense' : 'income');
   const toggleSub = (id: string) => (openSub = openSub === id ? null : id);
   const tap = (e: Entry) => editEntry(data, e);
 
@@ -36,13 +37,9 @@
 
 <header class="top">
   <RoundButton label="Übersicht" onclick={() => showYear(yearOf(m))}><House size={18} strokeWidth={1.6} /></RoundButton>
-  {#if m !== current}
-    <button class="today" onclick={() => (ui.month = current)}>
-      <Calendar size={20} strokeWidth={1.6} />
-      <span>{fullDate(today)}</span>
-      <span class="amount">{formatAmount(balance(data, current), true)}</span>
-    </button>
-  {/if}
+  <button class="balance amount" aria-label="Bilanz {monthLabel(m)}" onclick={() => (ui.month = current)}>
+    {formatAmount(balance(data, m), true)}
+  </button>
   <RoundButton label="Settings" onclick={openSettings}><SlidersHorizontal size={18} strokeWidth={1.6} /></RoundButton>
 </header>
 
@@ -54,7 +51,8 @@
     sigma
     tone="income"
     open={open === 'income'}
-    onToggle={() => toggle('income')}
+    fill
+    onToggle={toggle}
   >
     <EntryList
       sections={byCategory(data, 'income', scopeEntriesForMonth(data, 'income', m), editCategory)}
@@ -70,7 +68,8 @@
     sigma
     tone="expense"
     open={open === 'expense'}
-    onToggle={() => toggle('expense')}
+    fill
+    onToggle={toggle}
   >
     <Card sub tone="expense" title="Investments" icon={Sprout} total={scopeTotal(data, 'invest', m)} open={openSub === 'invest'} onToggle={() => toggleSub('invest')}>
       <EntryList sections={byCategory(data, 'invest', scopeEntriesForMonth(data, 'invest', m), editCategory)} onTap={tap} empty="Keine Investments – in den Settings hinzufügen" />
@@ -113,29 +112,30 @@
 
 <style>
   .top {
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     margin-bottom: 16px;
   }
-  .today {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .balance {
     height: 34px;
-    padding: 0 14px;
-    border: 1px solid var(--line);
+    padding: 0 16px;
+    border: 2px solid var(--frame);
     border-radius: 17px;
     font-size: 17px;
     font-weight: 600;
   }
   .cards {
+    flex: 0 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
   .hint {
+    flex: none;
     text-align: center;
     font-size: 12.5px;
     color: var(--muted);

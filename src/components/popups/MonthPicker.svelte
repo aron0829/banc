@@ -9,9 +9,18 @@
     title,
     value,
     allowUnlimited = false,
+    after,
     tone = 'neutral',
     onPick,
-  }: { title: string; value: Month | null; allowUnlimited?: boolean; tone?: Tone; onPick: (m: Month | null) => void } = $props();
+  }: {
+    title: string;
+    value: Month | null;
+    allowUnlimited?: boolean;
+    /** Only months after this one can be picked ("Bis" after "Von"). */
+    after?: Month;
+    tone?: Tone;
+    onPick: (m: Month | null) => void;
+  } = $props();
 
   const SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
   // svelte-ignore state_referenced_locally
@@ -31,7 +40,7 @@
   </div>
   <div class="grid">
     {#each monthsOfYear(year) as m, i (m)}
-      <button class="m {tone}" class:on={m === value} onclick={() => pick(m)}>{SHORT[i]}</button>
+      <button class="m {tone}" class:on={m === value} disabled={!!after && m <= after} onclick={() => pick(m)}>{SHORT[i]}</button>
     {/each}
   </div>
   {#if allowUnlimited}

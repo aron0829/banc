@@ -1,13 +1,15 @@
 <script lang="ts">
   import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Euro, LayoutGrid, Plus, SquarePen, Tag } from '@lucide/svelte';
   import { addDays, shortDate, todayDay, yearOf, type Day } from '../../lib/dates';
-  import { categoryOf, groupOf, visibleCategories, type Entry } from '../../lib/model';
+  import { focusNow } from '../../lib/focus';
+  import { categoryOf, groupOf, signOf, visibleCategories, type Entry } from '../../lib/model';
   import { amountInput, parseAmount } from '../../lib/money';
   import { addEntry, deleteEntry, updateEntry } from '../../lib/ops';
   import { amountAllowed } from '../../lib/rules';
-  import { SCOPES } from '../../lib/scopes';
+  import { SCOPES, type Tone } from '../../lib/scopes';
   import { app, commit } from '../../lib/sync.svelte';
   import { closePopup, openPopup } from '../../lib/ui.svelte';
+  import AddCategoryButton from '../AddCategoryButton.svelte';
   import ArtPicker from '../ArtPicker.svelte';
   import Field from '../Field.svelte';
   import Modal from '../Modal.svelte';
@@ -24,23 +26,32 @@
   const start = entry ?? { name: '', amount: NaN, date: initialDate ?? todayDay(), categoryId: initialCategory, groupId: undefined };
   let name = $state(start.name);
   let date = $state<Day>(start.date ?? todayDay());
-  let amountText = $state(Number.isNaN(start.amount) ? '' : amountInput(start.amount));
   // svelte-ignore state_referenced_locally
   let categoryId = $state(start.categoryId ?? (app.data ? visibleCategories(app.data, scope)[0]?.id : undefined));
+  // svelte-ignore state_referenced_locally
+  const startSign = app.data && categoryId ? signOf(categoryOf(app.data, categoryId)) : 0;
+  let amountText = $state(Number.isNaN(start.amount) ? (startSign < 0 ? '-' : '') : amountInput(start.amount));
   let groupId = $state<string | undefined>(start.groupId);
 
   const data = $derived(app.data!);
   const category = $derived(categoryId ? categoryOf(data, categoryId) : undefined);
   const group = $derived(groupOf(data, groupId));
-  const amount = $derived(parseAmount(amountText));
+  const sign = $derived(signOf(category));
+  const typed = $derived(parseAmount(amountText));
+  // Zusätzliche Einnahmen/Ausgaben get their sign forced, whatever was typed.
+  const amount = $derived(typed !== null && sign ? sign * Math.abs(typed) : typed);
   const missingGroup = $derived(!!category?.requiresGroup && (!group || group.deleted));
   const valid = $derived(amountAllowed(scope, amount) && !!category && !category.deleted && !missingGroup);
-  const tone = $derived(SCOPES[scope].tone);
+  const tone = $derived<Tone>(sign > 0 ? 'income' : sign < 0 ? 'expense' : SCOPES[scope].tone);
   const title = $derived(scope === 'expense' ? SCOPES.expense.title : `Übersicht ${yearOf(date)}`);
 
   function selectCategory(id: string) {
     if (id !== categoryId) groupId = undefined;
     categoryId = id;
+    // "Zusätzliche Ausgaben" start with a minus, everything else without
+    const s = signOf(categoryOf(data, id));
+    const digits = amountText.replace(/^[+-]/, '');
+    amountText = s < 0 ? `-${digits}` : s > 0 ? digits : amountText;
   }
 
   function pickGroup() {
@@ -87,11 +98,12 @@
     </div>
   </Field>
 
-  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && !amountAllowed(scope, amount)}>
-    <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" />&nbsp;€
+  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && amountText !== '-' && !amountAllowed(scope, amount)}>
+    <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" use:focusNow />&nbsp;€
   </Field>
 
   <Field icon={LayoutGrid} label="Art" {tone} block invalid={missingGroup && !!amountText}>
+    {#snippet action()}<AddCategoryButton {scope} onCreated={selectCategory} />{/snippet}
     <button class="group" class:muted={!group} onclick={pickGroup}>
       {group?.name ?? (category?.requiresGroup ? 'Gruppe wählen' : 'Gruppe')}<ChevronDown size={18} />
     </button>

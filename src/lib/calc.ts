@@ -1,5 +1,5 @@
 import { daysInMonth, monthOf, monthsOfYear, yearOf, type Day, type Month } from './dates';
-import { categoryOf, groupOf, isVisible, visibleCategories, type Data, type Entry, type Group, type Scope } from './model';
+import { categoryOf, generalCategories, groupOf, isVisible, type Data, type Entry, type Group, type Scope } from './model';
 
 const sum = (entries: Entry[]) => entries.reduce((s, e) => s + e.amount, 0);
 
@@ -80,10 +80,17 @@ export function overviewCategoryEntries(data: Data, categoryId: string, year: nu
 export const overviewCategoryTotal = (data: Data, categoryId: string, year: number) =>
   sum(overviewCategoryEntries(data, categoryId, year));
 
+/** "Allgemein": one-off overview entries of the year; Schulden don't count. */
+export const generalTotal = (data: Data, year: number) =>
+  generalCategories(data).reduce((s, c) => s + overviewCategoryTotal(data, c.id, year), 0);
+
 export function ownYearResult(data: Data, year: number, today: Day): number {
-  const months = overviewMonths(data, year, today).reduce((s, m) => s + m.balance, 0);
-  const cats = visibleCategories(data, 'overview').reduce((s, c) => s + overviewCategoryTotal(data, c.id, year), 0);
-  return months + cats;
+  return overviewMonths(data, year, today).reduce((s, m) => s + m.balance, 0) + generalTotal(data, year);
+}
+
+/** Schulden over all years, since they carry on until paid back. */
+export function debtEntries(data: Data, categoryId: string): Entry[] {
+  return data.entries.filter((e) => e.categoryId === categoryId && isVisible(data, e));
 }
 
 function firstYear(data: Data): number | null {
@@ -104,8 +111,14 @@ export function previousYears(data: Data, year: number, today: Day): { year: num
   return out;
 }
 
+/** "Jahresübersicht": month balances of the year plus the results of earlier years. */
+export function yearSummaryTotal(data: Data, year: number, today: Day): number {
+  const months = overviewMonths(data, year, today).reduce((s, m) => s + m.balance, 0);
+  return months + previousYears(data, year, today).reduce((s, y) => s + y.total, 0);
+}
+
 export function overviewTotal(data: Data, year: number, today: Day): number {
-  return ownYearResult(data, year, today) + previousYears(data, year, today).reduce((s, y) => s + y.total, 0);
+  return yearSummaryTotal(data, year, today) + generalTotal(data, year);
 }
 
 export interface EntryRow {

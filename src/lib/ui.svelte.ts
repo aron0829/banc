@@ -1,4 +1,4 @@
-import type { Component } from 'svelte';
+import { flushSync, type Component } from 'svelte';
 import { monthOf, todayDay, yearOf, type Day, type Month } from './dates';
 import { rollToday } from './rules';
 
@@ -20,8 +20,23 @@ export const ui = new UI();
 
 let nextId = 1;
 
+/** Mounts synchronously, so a popup can focus a field while still inside the tap (iOS only opens the keyboard then). */
 export function openPopup<P extends Record<string, unknown>>(component: Component<P>, props: P): void {
-  ui.popups = [...ui.popups, { id: nextId++, component, props }];
+  flushSync(() => (ui.popups = [...ui.popups, { id: nextId++, component, props }]));
+}
+
+/** Mirrors the visual viewport (shrinks when the keyboard opens) into CSS variables for the popups. */
+export function trackViewport(): void {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const set = () => {
+    const root = document.documentElement.style;
+    root.setProperty('--vv-height', `${vv.height}px`);
+    root.setProperty('--vv-top', `${vv.offsetTop}px`);
+  };
+  set();
+  vv.addEventListener('resize', set);
+  vv.addEventListener('scroll', set);
 }
 
 /** Closes the top-most popup. */

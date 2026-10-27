@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { Plus } from '@lucide/svelte';
-  import { editCategory, newCategory } from '../lib/actions';
+  import { editCategory } from '../lib/actions';
   import { longpress } from '../lib/longpress';
   import { visibleCategories, type Scope } from '../lib/model';
   import type { Tone } from '../lib/scopes';
@@ -10,6 +9,7 @@
   let { scope, selected, onSelect, tone = 'neutral' }: { scope: Scope; selected?: string; onSelect: (id: string) => void; tone?: Tone } = $props();
 
   const categories = $derived(app.data ? visibleCategories(app.data, scope) : []);
+  const name = $derived(categories.find((c) => c.id === selected)?.name);
 </script>
 
 <div class="art">
@@ -26,8 +26,8 @@
       <CatIcon name={c.icon} size={20} />
     </button>
   {/each}
-  <button class="add" aria-label="Kategorie hinzufügen" onclick={() => newCategory(scope, onSelect)}><Plus size={20} strokeWidth={2} /></button>
 </div>
+{#if name}<p class="name">{name}</p>{/if}
 
 <style>
   .art {
@@ -55,11 +55,10 @@
   .cat.on.expense {
     border-color: var(--expense);
   }
-  .add {
-    width: 28px;
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .name {
+    margin: -2px 0 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
   }
 </style>

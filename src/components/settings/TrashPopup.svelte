@@ -58,7 +58,7 @@
   }
 </script>
 
-<Modal title="Papierkorb" icon={Trash} onConfirm={closePopup} onCancel={closePopup}>
+<Modal title="Papierkorb" icon={Trash} onConfirm={closePopup} onClose={closePopup}>
   <div class="box">
     <EntryList sections={listSections} onTap={tapEntry} empty="Der Papierkorb ist leer" />
   </div>

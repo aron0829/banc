@@ -111,6 +111,9 @@ import {
   Drama,
 } from '@lucide/svelte';
 import type { Component } from 'svelte';
+import DollarMinus from '../components/icons/DollarMinus.svelte';
+import DollarPlus from '../components/icons/DollarPlus.svelte';
+import WeightDollar from '../components/icons/WeightDollar.svelte';
 
 export const CATEGORY_ICONS: Record<string, Component> = {
   'briefcase': Briefcase,
@@ -222,6 +225,9 @@ export const CATEGORY_ICONS: Record<string, Component> = {
   'mail': Mail,
   'cigarette': Cigarette,
   'drama': Drama,
+  'dollar-plus': DollarPlus,
+  'dollar-minus': DollarMinus,
+  'weight-dollar': WeightDollar,
 };
 
 export const ICON_NAMES = Object.keys(CATEGORY_ICONS);

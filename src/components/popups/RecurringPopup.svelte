@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Calendar, Euro, LayoutGrid, Plus, SquarePen, Tag } from '@lucide/svelte';
   import { monthOf, shortMonth, todayDay, type Month } from '../../lib/dates';
+  import { focusNow } from '../../lib/focus';
   import { categoryOf, visibleCategories, type Entry, type Scope } from '../../lib/model';
   import { amountInput, parseAmount } from '../../lib/money';
   import { addEntry, deleteEntry, updateEntry } from '../../lib/ops';
@@ -8,6 +9,7 @@
   import { SCOPES } from '../../lib/scopes';
   import { app, commit } from '../../lib/sync.svelte';
   import { closePopup, openPopup } from '../../lib/ui.svelte';
+  import AddCategoryButton from '../AddCategoryButton.svelte';
   import ArtPicker from '../ArtPicker.svelte';
   import Field from '../Field.svelte';
   import Modal from '../Modal.svelte';
@@ -29,12 +31,12 @@
   const data = $derived(app.data!);
   const amount = $derived(parseAmount(amountText));
   const category = $derived(categoryId ? categoryOf(data, categoryId) : undefined);
-  const rangeOk = $derived(to === null || to >= from);
+  const rangeOk = $derived(to === null || to > from);
   const valid = $derived(amountAllowed(scope, amount) && !!category && !category.deleted && rangeOk);
   const tone = $derived(SCOPES[scope].tone);
 
   const pickFrom = () => openPopup(MonthPicker, { title: 'Von', value: from, tone, onPick: (m: Month | null) => m && (from = m) });
-  const pickTo = () => openPopup(MonthPicker, { title: 'Bis', value: to, tone, allowUnlimited: true, onPick: (m: Month | null) => (to = m) });
+  const pickTo = () => openPopup(MonthPicker, { title: 'Bis', value: to, tone, allowUnlimited: true, after: from, onPick: (m: Month | null) => (to = m) });
 
   function save() {
     if (!valid) return;
@@ -72,10 +74,11 @@
   </Field>
 
   <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && !amountAllowed(scope, amount)}>
-    <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" />&nbsp;€
+    <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" use:focusNow />&nbsp;€
   </Field>
 
   <Field icon={LayoutGrid} label="Art" {tone} block>
+    {#snippet action()}<AddCategoryButton {scope} onCreated={(id) => (categoryId = id)} />{/snippet}
     {#snippet below()}
       <ArtPicker {scope} selected={categoryId} onSelect={(id) => (categoryId = id)} {tone} />
     {/snippet}

@@ -13,10 +13,12 @@
     subtitle,
     subtitleIcon,
     onCancel,
+    onClose,
     onConfirm,
     confirmDisabled = false,
     onDelete,
     onAdd,
+    addIsMain = false,
     children,
   }: {
     tone?: Tone;
@@ -25,23 +27,37 @@
     catIcon?: string;
     subtitle?: string;
     subtitleIcon?: Component;
+    /** Shows the X button; also used for Escape / tapping outside. */
     onCancel?: () => void;
+    /** Escape / tapping outside only, for popups where an X would do the same as ✓. */
+    onClose?: () => void;
     onConfirm?: () => void;
     confirmDisabled?: boolean;
     onDelete?: () => void;
     onAdd?: () => void;
+    /** "+" becomes the big coloured button in the middle, ✓ moves small to its left. */
+    addIsMain?: boolean;
     children?: Snippet;
   } = $props();
 
+  const dismiss = () => (onCancel ?? onClose)?.();
+
   function key(e: KeyboardEvent) {
-    if (e.key === 'Escape') onCancel?.();
+    if (e.key === 'Escape') dismiss();
+  }
+
+  /** Once the keyboard is up, scroll the focused field into the visible part of the popup. */
+  function focusin(e: FocusEvent) {
+    const el = e.target as HTMLElement;
+    if (el.tagName !== 'INPUT') return;
+    setTimeout(() => el.isConnected && el.scrollIntoView({ block: 'nearest' }), 300);
   }
 </script>
 
 <svelte:window onkeydown={key} />
 
-<div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && onCancel?.()}>
-  <div class="modal {tone}" role="dialog" aria-modal="true" aria-label={title ?? subtitle}>
+<div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && dismiss()}>
+  <div class="modal {tone}" role="dialog" aria-modal="true" aria-label={title ?? subtitle} tabindex="-1" onfocusin={focusin}>
     {#if title}
       <h2>{#if catIcon}<CatIcon name={catIcon} size={24} />{:else if icon}{@const I = icon}<I size={24} strokeWidth={1.6} />{/if}{title}</h2>
     {/if}
@@ -50,6 +66,11 @@
     {/if}
     {#if children}<div class="body">{@render children()}</div>{/if}
     <div class="actions">
+      {#if addIsMain}
+        <RoundButton label="Fertig" size={30} onclick={onConfirm}><Check size={18} strokeWidth={2.2} /></RoundButton>
+        <RoundButton label="Hinzufügen" size={38} strong {tone} onclick={onAdd}><Plus size={22} strokeWidth={2.2} /></RoundButton>
+        <span class="slot"></span>
+      {:else}
       {#if onCancel}
         <RoundButton label="Abbrechen" size={30} onclick={onCancel}><X size={18} strokeWidth={2.2} /></RoundButton>
       {/if}
@@ -64,6 +85,7 @@
       {#if onDelete}
         <RoundButton label="Löschen" size={30} onclick={onDelete}><Trash size={15} strokeWidth={1.8} /></RoundButton>
       {/if}
+      {/if}
     </div>
   </div>
 </div>
@@ -71,7 +93,11 @@
 <style>
   .overlay {
     position: fixed;
-    inset: 0;
+    left: 0;
+    right: 0;
+    /* follows the visual viewport, so the popup moves up above the on-screen keyboard */
+    top: var(--vv-top, 0px);
+    height: var(--vv-height, 100dvh);
     background: var(--overlay);
     display: flex;
     align-items: center;
@@ -82,7 +108,7 @@
   .modal {
     width: 100%;
     max-width: 360px;
-    max-height: calc(100dvh - 40px);
+    max-height: 100%;
     overflow-y: auto;
     scrollbar-width: none;
     background: var(--surface);
@@ -127,6 +153,9 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .slot {
+    width: 30px;
   }
   .actions {
     display: flex;

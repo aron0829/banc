@@ -13,7 +13,9 @@
     sigma = false,
     tone = 'neutral',
     sub = false,
+    accent = false,
     open = true,
+    fill = false,
     onToggle,
     onLongPress,
     children,
@@ -25,17 +27,21 @@
     sigma?: boolean;
     tone?: Tone;
     sub?: boolean;
+    /** Sub card outlined in the full tone colour. */
+    accent?: boolean;
     open?: boolean;
+    /** Takes the remaining height when open; the body scrolls instead of the page. */
+    fill?: boolean;
     onToggle?: () => void;
     onLongPress?: () => void;
     children?: Snippet;
   } = $props();
 </script>
 
-<section class="card {tone}" class:sub>
+<section class="card {tone}" class:sub class:accent class:fill={fill && open}>
   <button class="head no-select" onclick={onToggle} disabled={!onToggle && !onLongPress} use:longpress={onLongPress}>
     <span class="icon">
-      {#if catIcon}<CatIcon name={catIcon} size={sub ? 19 : 22} />{:else if icon}{@const I = icon}<I size={sub ? 19 : 22} strokeWidth={1.6} />{/if}
+      {#if catIcon}<CatIcon name={catIcon} size={sub ? 19 : 22} />{:else if icon}{@const I = icon}<I size={sub ? 19 : 22} strokeWidth={sub ? 1.8 : 1.6} />{/if}
     </span>
     <span class="title">{title}</span>
     {#if total !== undefined}
@@ -71,7 +77,32 @@
   .card.sub.expense {
     border-color: var(--expense-line);
   }
+  .card.sub.income {
+    border-color: var(--income-line);
+  }
+  .card.sub.accent.income {
+    border-color: var(--income);
+  }
+  .card.sub.accent.expense {
+    border-color: var(--expense);
+  }
+  .card.fill {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .card.fill > .body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .card.fill > .body::-webkit-scrollbar {
+    display: none;
+  }
   .head {
+    flex: none;
     width: 100%;
     display: flex;
     align-items: center;
@@ -104,6 +135,9 @@
     margin-right: 8px;
     font-size: 19px;
   }
+  .sub .head {
+    min-height: 36px;
+  }
   .sub .title {
     font-size: 16px;
     font-weight: 500;
@@ -116,6 +150,9 @@
     padding: 2px 0 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+  }
+  .sub > .body {
+    padding: 0 0 9px;
   }
 </style>

@@ -9,6 +9,7 @@
     block = false,
     invalid = false,
     children,
+    action,
     below,
   }: {
     icon?: Component;
@@ -17,6 +18,8 @@
     block?: boolean;
     invalid?: boolean;
     children?: Snippet;
+    /** Small control right after the label (e.g. "+" for a new category). */
+    action?: Snippet;
     below?: Snippet;
   } = $props();
 </script>
@@ -25,6 +28,7 @@
   <div class="line">
     {#if icon}{@const I = icon}<I size={18} strokeWidth={1.7} />{/if}
     {#if label}<span class="label">{label}</span>{/if}
+    {@render action?.()}
     <div class="value">{@render children?.()}</div>
   </div>
   {#if below}{@render below()}{/if}
@@ -41,7 +45,7 @@
     justify-content: center;
   }
   .income {
-    border-color: color-mix(in srgb, var(--income) 35%, var(--line));
+    border-color: var(--income-line);
   }
   .expense {
     border-color: var(--expense-line);

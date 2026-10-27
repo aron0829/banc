@@ -1,7 +1,7 @@
 import { monthOf, type Day, type Month } from './dates';
 import type { Scope } from './model';
 
-/** Negative amounts only make sense in the overview (e.g. "Schulden -10"). */
+/** Negative amounts only make sense in the overview (e.g. "Schulden -10", "Zusätzliche Ausgaben"). */
 export function amountAllowed(scope: Scope, amount: number | null): boolean {
   return amount !== null && (scope === 'overview' || amount >= 0);
 }

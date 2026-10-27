@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   balance, categoryTotal, expenses, groupedEntries, hasActivity, income, isActive, limitHint,
-  effectiveStart, overviewCategoryTotal, overviewMonths, overviewTotal, ownYearResult, previousYears, scopeTotal, usedPercent,
+  debtEntries, effectiveStart, generalTotal, overviewCategoryTotal, overviewMonths, overviewTotal, ownYearResult, previousYears,
+  scopeTotal, usedPercent, yearSummaryTotal,
 } from './calc';
 import type { Category, Data, Entry, Scope } from './model';
 
@@ -16,7 +17,7 @@ function base(): Data {
   return {
     categories: [
       cat('job', 'income'), cat('wohnen', 'fixed'), cat('handy', 'fixed'), cat('crypto', 'invest'),
-      cat('essen', 'expense'), cat('shopping', 'expense'), cat('schulden', 'overview', { requiresGroup: true }), cat('other', 'overview'),
+      cat('essen', 'expense'), cat('shopping', 'expense'), cat('schulden', 'overview', { requiresGroup: true, kind: 'debt' }), cat('other', 'overview'),
     ],
     groups: [{ id: 'mama', categoryId: 'schulden', name: 'Mama' }, { id: 'g1', categoryId: 'essen', name: 'Group 1' }],
     entries: [],
@@ -123,14 +124,21 @@ describe('overview', () => {
     expect(overviewCategoryTotal(d, 'schulden', 2026)).toBe(10000);
     expect(overviewCategoryTotal(d, 'other', 2026)).toBe(0);
   });
-  it('computes own year result = months + overview categories', () => {
-    expect(ownYearResult(d, 2026, today)).toBe(270000 + 10000);
+  it('computes own year result = months + overview categories, without Schulden', () => {
+    expect(generalTotal(d, 2026)).toBe(0);
+    expect(ownYearResult(d, 2026, today)).toBe(270000);
+  });
+  it('keeps Schulden apart, summed over all years', () => {
+    expect(debtEntries(d, 'schulden').reduce((s, e) => s + e.amount, 0)).toBe(10000);
   });
   it('carries previous years, newest first, skipping zero years', () => {
     expect(previousYears(d, 2026, today)).toEqual([{ year: 2025, total: 10000 }, { year: 2024, total: 2000 }]);
   });
-  it('computes overview total = own result + previous years', () => {
-    expect(overviewTotal(d, 2026, today)).toBe(280000 + 12000);
+  it('computes Jahresübersicht = months + previous years and total = Jahresübersicht + Allgemein', () => {
+    expect(yearSummaryTotal(d, 2026, today)).toBe(270000 + 12000);
+    expect(overviewTotal(d, 2026, today)).toBe(270000 + 12000);
+    const withGeneral: Data = { ...d, entries: [...d.entries, entry('other', -3000, { date: '2026-05-01' })] };
+    expect(overviewTotal(withGeneral, 2026, today)).toBe(270000 + 12000 - 3000);
   });
 });
 

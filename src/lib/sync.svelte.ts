@@ -1,5 +1,5 @@
 import { monthOf, todayDay } from './dates';
-import { defaultData, type Data } from './model';
+import { defaultData, migrate, type Data } from './model';
 import { profileName } from './profile';
 import { Saver, type SaveResult } from './saver';
 import { logout as authLogout, supabase } from './supabase';
@@ -63,8 +63,11 @@ export async function load(): Promise<void> {
   }
   if (stamp !== changes || saver.busy) return;
   if (row) {
-    app.data = row.data as Data;
+    const data = row.data as Data;
+    const migrated = migrate(data);
     saver.version = row.version;
+    if (migrated === data) app.data = data;
+    else commit(migrated);
     return;
   }
   const fresh = defaultData(monthOf(todayDay()));

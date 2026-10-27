@@ -13,7 +13,6 @@
   }: { tone?: Tone; label: string; onAdd: () => void; onPrev: () => void; onNext: () => void; onLabel?: () => void } = $props();
 </script>
 
-<div class="spacer"></div>
 <nav class="bottom">
   <RoundButton label="Eintrag hinzufügen" size={40} strong {tone} onclick={onAdd}><Plus size={24} strokeWidth={2} /></RoundButton>
   <div class="pill">
@@ -24,23 +23,14 @@
 </nav>
 
 <style>
-  .spacer {
-    height: 150px;
-  }
   .bottom {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: max(16px, env(safe-area-inset-bottom));
+    flex: none;
+    margin-top: auto;
+    padding-top: 14px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 14px;
-    pointer-events: none;
-    z-index: 5;
-  }
-  .bottom > :global(*) {
-    pointer-events: auto;
   }
   .pill {
     display: flex;

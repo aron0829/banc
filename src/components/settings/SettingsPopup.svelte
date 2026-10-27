@@ -35,7 +35,7 @@
   </button>
 {/snippet}
 
-<Modal title="Settings" icon={SlidersHorizontal} onCancel={closePopup} onConfirm={closePopup}>
+<Modal title="Settings" icon={SlidersHorizontal} onClose={closePopup} onConfirm={closePopup}>
   {#each sections as s (s.scope)}
     {@render row(SCOPES[s.scope].icon, SCOPES[s.scope].title, s.tone, () => openPopup(RecurringSettings, { scope: s.scope }))}
   {/each}

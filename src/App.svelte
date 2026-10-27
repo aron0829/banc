@@ -3,12 +3,13 @@
   import MonthView from './components/MonthView.svelte';
   import OverviewView from './components/OverviewView.svelte';
   import { app, init } from './lib/sync.svelte';
-  import { ui } from './lib/ui.svelte';
+  import { trackViewport, ui } from './lib/ui.svelte';
 
   init();
+  trackViewport();
 </script>
 
-<div class="page">
+<div class="page" class:fixed={!!app.data}>
   {#if !app.ready}
     <!-- checking session -->
   {:else if !app.userId}
@@ -37,6 +38,14 @@
     margin: 0 auto;
     padding: max(20px, env(safe-area-inset-top)) 20px 0;
     min-height: 100dvh;
+  }
+  /* Month and overview fit the screen; only the open card scrolls inside. */
+  .page.fixed {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   .loading {
     text-align: center;
