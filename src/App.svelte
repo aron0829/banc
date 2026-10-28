@@ -2,8 +2,10 @@
   import Login from './components/Login.svelte';
   import MonthView from './components/MonthView.svelte';
   import OverviewView from './components/OverviewView.svelte';
+  import { Info } from '@lucide/svelte';
+  import IntroPopup from './components/popups/IntroPopup.svelte';
   import { app, init } from './lib/sync.svelte';
-  import { trackViewport, ui } from './lib/ui.svelte';
+  import { openPopup, trackViewport, ui } from './lib/ui.svelte';
 
   init();
   trackViewport();
@@ -21,6 +23,11 @@
   {:else}
     <OverviewView data={app.data} />
   {/if}
+  {#if app.data}
+    <button class="info" aria-label="Einführung" title="Einführung" onclick={() => openPopup(IntroPopup, {})}>
+      <Info size={22} strokeWidth={1.6} />
+    </button>
+  {/if}
 </div>
 
 {#each ui.popups as p (p.id)}
@@ -34,6 +41,7 @@
 
 <style>
   .page {
+    position: relative;
     max-width: 420px;
     margin: 0 auto;
     padding: max(20px, env(safe-area-inset-top)) 20px 0;
@@ -46,6 +54,18 @@
     flex-direction: column;
     overflow: hidden;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  /* bottom-left corner, level with the month pill */
+  .info {
+    position: absolute;
+    left: 20px;
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 5px);
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
   }
   .loading {
     text-align: center;
