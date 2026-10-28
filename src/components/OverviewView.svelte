@@ -53,7 +53,6 @@
     title="Jahresübersicht"
     icon={SCOPES.overview.icon}
     total={yearSummaryTotal(data, year, today)}
-    sigma
     open={open === 'year'}
     fill
     onToggle={() => (open = 'year')}
@@ -87,7 +86,6 @@
     title="Allgemein"
     icon={SCOPES.overview.icon}
     total={generalTotal(data, year)}
-    sigma
     open={open === 'general'}
     fill
     onToggle={() => (open = 'general')}
@@ -109,7 +107,7 @@
   </Card>
 
   {#if debts.length}
-    <Card title="Schulden" catIcon={debts[0].icon} total={debtTotal} sigma open={open === 'debt'} fill onToggle={() => (open = 'debt')}>
+    <Card title="Schulden" catIcon={debts[0].icon} total={debtTotal} open={open === 'debt'} fill onToggle={() => (open = 'debt')}>
       {#each debts as c (c.id)}
         <EntryList sections={byGroup(data, debtEntries(data, c.id))} onTap={tap} empty="Keine Schulden" />
       {/each}

@@ -10,7 +10,6 @@
     icon,
     catIcon,
     total,
-    sigma = false,
     tone = 'neutral',
     sub = false,
     accent = false,
@@ -24,7 +23,6 @@
     icon?: Component;
     catIcon?: string;
     total?: number;
-    sigma?: boolean;
     tone?: Tone;
     sub?: boolean;
     /** Sub card outlined in the full tone colour. */
@@ -45,7 +43,7 @@
     </span>
     <span class="title">{title}</span>
     {#if total !== undefined}
-      <span class="total amount">{#if sigma}<b class="sigma">Σ</b>{/if}{formatAmount(total)}</span>
+      <span class="total amount">{formatAmount(total)}</span>
     {/if}
   </button>
   {#if open && children}
@@ -129,11 +127,7 @@
   }
   .total {
     font-size: 17px;
-    font-weight: 600;
-  }
-  .sigma {
-    margin-right: 8px;
-    font-size: 19px;
+    font-weight: 400;
   }
   .sub .head {
     min-height: 36px;

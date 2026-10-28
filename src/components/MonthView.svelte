@@ -48,7 +48,6 @@
     title={SCOPES.income.title}
     icon={SCOPES.income.icon}
     total={income(data, m)}
-    sigma
     tone="income"
     open={open === 'income'}
     fill
@@ -65,7 +64,6 @@
     title={SCOPES.expense.title}
     icon={SCOPES.expense.icon}
     total={expenses(data, m)}
-    sigma
     tone="expense"
     open={open === 'expense'}
     fill

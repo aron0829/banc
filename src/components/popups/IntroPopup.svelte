@@ -1,56 +1,59 @@
 <script lang="ts">
-  import {
-    Calendar, ChevronLeft, ChevronRight, CircleCheck, House, Info, LayoutList, Plus, SlidersHorizontal, Sparkles, SquarePen, Wallet,
-  } from '@lucide/svelte';
-  import type { Component } from 'svelte';
+  import { ChevronLeft, ChevronRight, Info } from '@lucide/svelte';
   import { closePopup } from '../../lib/ui.svelte';
   import Modal from '../Modal.svelte';
+  import IntroScreen, { type IntroKind, type IntroPart } from './IntroScreen.svelte';
 
-  const steps: { icon: Component; title: string; text: string }[] = [
+  const steps: { title: string; text: string; kind?: IntroKind; focus?: IntroPart[]; open?: 'essen' }[] = [
     {
-      icon: Sparkles,
       title: 'Willkommen bei banc',
-      text: 'Hier behältst du deine Einnahmen und Ausgaben Monat für Monat im Blick. Die nächsten Schritte zeigen dir kurz, was wo ist.',
+      text: 'Hier behältst du deine Einnahmen und Ausgaben Monat für Monat im Blick. Die nächsten Schritte zeigen dir, was wo ist.',
     },
     {
-      icon: Wallet,
       title: 'Bilanz',
-      text: 'Oben in der Mitte steht die Bilanz des Monats: Einnahmen minus Ausgaben. Antippen bringt dich zurück zum aktuellen Monat.',
+      text: 'Oben in der Mitte steht die Bilanz des Monats: Einnahmen minus Ausgaben. Antippen springt zum aktuellen Monat.',
+      focus: ['balance'],
     },
     {
-      icon: LayoutList,
       title: 'Einnahmen & Ausgaben',
-      text: 'Die zwei Karten zeigen alles für den Monat. Tipp auf eine Karte, um zwischen ihnen zu wechseln. In den Ausgaben stecken Investments, Fixkosten und deine Kategorien – antippen klappt sie auf.',
+      text: 'Tipp auf eine Karte, um zwischen beiden zu wechseln. In den Ausgaben stecken Investments, Fixkosten und deine Kategorien – antippen klappt sie auf.',
+      focus: ['income', 'expense'],
     },
     {
-      icon: Plus,
       title: 'Ausgabe eintragen',
-      text: 'Mit dem + unten trägst du eine Ausgabe ein: Name (optional), Tag, Preis und Art. Unter den Karten siehst du, wie viel Prozent deiner Einnahmen schon verbraucht sind.',
+      text: 'Mit dem + trägst du eine neue Ausgabe ein. Darüber siehst du, wie viel Prozent deiner Einnahmen schon verbraucht sind.',
+      focus: ['add', 'hint'],
     },
     {
-      icon: SquarePen,
+      title: 'Neuer Eintrag',
+      text: 'Name (optional), Tag, Preis und Art wählen, dann mit ✓ speichern. Mit dem + neben „Art“ legst du eine neue Kategorie an.',
+      kind: 'entry',
+    },
+    {
       title: 'Bearbeiten',
       text: 'Tipp auf einen Eintrag, um ihn zu ändern oder zu löschen. Halte eine Kategorie gedrückt, um Name und Icon zu ändern. Gelöschtes landet im Papierkorb.',
+      focus: ['expense', 'entry'],
+      open: 'essen',
     },
     {
-      icon: Calendar,
       title: 'Monate wechseln',
-      text: 'Mit den Pfeilen in der Leiste unten blätterst du durch die Monate. Ein Tipp auf den Monatsnamen springt zurück zu heute.',
+      text: 'Mit den Pfeilen blätterst du durch die Monate. Ein Tipp auf den Monatsnamen springt zurück zu heute.',
+      focus: ['pill'],
     },
     {
-      icon: House,
       title: 'Übersicht',
-      text: 'Das Haus oben links öffnet das Jahr: Bilanzen aller Monate (antippen springt hin), „Allgemein“ für Einmalposten und deine Schulden, die nicht zur Gesamtsumme zählen.',
+      text: 'Das Haus oben links öffnet das Jahr: Bilanzen aller Monate, „Allgemein“ für Einmalposten und deine Schulden, die nicht zur Gesamtsumme zählen.',
+      kind: 'overview',
     },
     {
-      icon: SlidersHorizontal,
       title: 'Settings',
-      text: 'Oben rechts legst du Wiederkehrendes an – Einnahmen, Fixkosten und Investments mit Zeitraum. Die werden jeden Monat automatisch eingetragen. Außerdem: Papierkorb, Hell/Dunkel und Abmelden.',
+      text: 'Oben rechts legst du Wiederkehrendes an – Einnahmen, Fixkosten und Investments mit Zeitraum. Die landen jeden Monat automatisch in der Liste.',
+      kind: 'settings',
     },
     {
-      icon: CircleCheck,
       title: 'Fertig',
       text: 'Das war’s! Über das kleine i unten links kannst du diese Einführung jederzeit wieder öffnen.',
+      focus: ['info'],
     },
   ];
 
@@ -68,12 +71,9 @@
 
 <Modal title="Einführung" icon={Info} onClose={closePopup} onConfirm={closePopup}>
   <div class="step">
-    {#key step}
-      {@const I = s.icon}
-      <span class="icon"><I size={26} strokeWidth={1.6} /></span>
-      <h4>{s.title}</h4>
-      <p>{s.text}</p>
-    {/key}
+    <IntroScreen kind={s.kind} focus={s.focus} open={s.open} />
+    <h4>{s.title}</h4>
+    <p>{s.text}</p>
   </div>
   <div class="nav">
     <button aria-label="Zurück" onclick={() => step--} disabled={step === 0}><ChevronLeft size={20} /></button>
@@ -92,27 +92,18 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 8px;
-    /* fits the longest step, so the popup doesn't jump while paging */
-    min-height: 222px;
-  }
-  .icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    border: 1.5px solid var(--frame);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 4px;
+    gap: 6px;
   }
   h4 {
-    margin: 4px 0 0;
+    margin: 8px 0 0;
     font-size: 16px;
     font-weight: 700;
   }
   p {
+    width: 100%;
     margin: 0;
+    /* fits the longest step, so the popup doesn't jump while paging */
+    min-height: 84px;
     font-size: 14px;
     line-height: 1.5;
     color: var(--muted);
