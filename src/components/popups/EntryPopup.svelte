@@ -29,16 +29,26 @@
   // svelte-ignore state_referenced_locally
   let categoryId = $state(start.categoryId ?? (app.data ? visibleCategories(app.data, scope)[0]?.id : undefined));
   // svelte-ignore state_referenced_locally
-  const startSign = app.data && categoryId ? signOf(categoryOf(app.data, categoryId)) : 0;
-  let amountText = $state(Number.isNaN(start.amount) ? (startSign < 0 ? '-' : '') : amountInput(start.amount));
+  const startCategory = app.data && categoryId ? categoryOf(app.data, categoryId) : undefined;
+  // svelte-ignore state_referenced_locally
+  const startSign = signOf(startCategory);
+  // Schulden: the direction comes from the "Ich schulde / Ich bekomme" switch, not from a typed sign.
+  // svelte-ignore state_referenced_locally
+  let owe = $state(Number.isNaN(start.amount) || start.amount < 0);
+  let amountText = $state(
+    Number.isNaN(start.amount)
+      ? startSign < 0 ? '-' : ''
+      : amountInput(startCategory?.kind === 'debt' ? Math.abs(start.amount) : start.amount),
+  );
   let groupId = $state<string | undefined>(start.groupId);
 
   const data = $derived(app.data!);
   const category = $derived(categoryId ? categoryOf(data, categoryId) : undefined);
   const group = $derived(groupOf(data, groupId));
-  const sign = $derived(signOf(category));
+  const isDebt = $derived(category?.kind === 'debt');
+  const sign = $derived(isDebt ? (owe ? -1 : 1) : signOf(category));
   const typed = $derived(parseAmount(amountText));
-  // Zusätzliche Einnahmen/Ausgaben get their sign forced, whatever was typed.
+  // Zusätzliche Einnahmen/Ausgaben and Schulden get their sign forced, whatever was typed.
   const amount = $derived(typed !== null && sign ? sign * Math.abs(typed) : typed);
   const missingGroup = $derived(!!category?.requiresGroup && (!group || group.deleted));
   const valid = $derived(amountAllowed(scope, amount) && !!category && !category.deleted && !missingGroup);
@@ -49,9 +59,10 @@
     if (id !== categoryId) groupId = undefined;
     categoryId = id;
     // "Zusätzliche Ausgaben" start with a minus, everything else without
-    const s = signOf(categoryOf(data, id));
+    const c = categoryOf(data, id);
+    const s = signOf(c);
     const digits = amountText.replace(/^[+-]/, '');
-    amountText = s < 0 ? `-${digits}` : s > 0 ? digits : amountText;
+    amountText = s < 0 ? `-${digits}` : s > 0 || c?.kind === 'debt' ? digits : amountText;
   }
 
   function pickGroup() {
@@ -98,8 +109,16 @@
     </div>
   </Field>
 
-  <Field icon={Euro} label="Preis" {tone} invalid={amountText !== '' && amountText !== '-' && !amountAllowed(scope, amount)}>
+  <Field icon={Euro} label="Preis" {tone} block={isDebt} invalid={amountText !== '' && amountText !== '-' && !amountAllowed(scope, amount)}>
     <input bind:value={amountText} inputmode="decimal" placeholder="0.00" aria-label="Preis" class="price" use:focusNow />&nbsp;€
+    {#snippet below()}
+      {#if isDebt}
+        <div class="direction" role="group" aria-label="Richtung">
+          <button class="expense" class:on={owe} aria-pressed={owe} onclick={() => (owe = true)}>Ich schulde</button>
+          <button class="income" class:on={!owe} aria-pressed={!owe} onclick={() => (owe = false)}>Ich bekomme</button>
+        </div>
+      {/if}
+    {/snippet}
   </Field>
 
   <Field icon={LayoutGrid} label="Art" {tone} block invalid={missingGroup && !!amountText}>
@@ -140,6 +159,32 @@
   }
   .price {
     max-width: 140px;
+  }
+  .direction {
+    display: flex;
+    gap: 6px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .direction button {
+    flex: 1;
+    padding: 6px 0;
+    border-radius: 999px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .direction .on {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .direction .on.expense {
+    background: var(--expense-bg);
+    color: var(--expense);
+  }
+  .direction .on.income {
+    background: var(--income-bg);
+    color: var(--income);
   }
   .group {
     display: inline-flex;
