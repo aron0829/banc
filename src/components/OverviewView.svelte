@@ -1,24 +1,21 @@
 <script lang="ts">
-  import { Calendar, Minus, Plus, RotateCcwClock, SlidersHorizontal } from '@lucide/svelte';
-  import { editCategory, editEntry, newOneOff, openSettings } from '../lib/actions';
+  import { Calendar, Minus, Plus, RotateCcwClock } from '@lucide/svelte';
+  import { editCategory, editEntry } from '../lib/actions';
   import {
-    debtEntries, generalTotal, overviewCategoryEntries, overviewCategoryTotal, overviewMonths, overviewTotal, previousYears, yearSummaryTotal,
+    debtEntries, generalTotal, overviewCategoryEntries, overviewCategoryTotal, overviewMonths, previousYears, yearSummaryTotal,
   } from '../lib/calc';
-  import { monthLabel, monthOf, yearOf, type Day } from '../lib/dates';
+  import { monthLabel } from '../lib/dates';
   import { debtCategories, generalCategories, type Category, type Data, type Entry } from '../lib/model';
   import { formatAmount } from '../lib/money';
   import { SCOPES, type Tone } from '../lib/scopes';
   import { byGroup } from '../lib/sections';
-  import { showMonth, ui } from '../lib/ui.svelte';
-  import BottomBar from './BottomBar.svelte';
+  import { setYear, showMonth, ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
   import EntryList from './EntryList.svelte';
-  import RoundButton from './RoundButton.svelte';
 
   let { data }: { data: Data } = $props();
 
   const today = $derived(ui.today);
-  const thisYear = $derived(yearOf(today));
   const year = $derived(ui.year);
 
   // One card open at a time; tapping a closed one opens it.
@@ -37,16 +34,7 @@
 
   const kindTone = (c: Category): Tone => (c.kind === 'plus' ? 'income' : c.kind === 'minus' ? 'expense' : 'neutral');
   const tap = (e: Entry) => editEntry(data, e);
-
-  const monthTarget = $derived(year === thisYear ? monthOf(today) : year < thisYear ? `${year}-12` : `${year}-01`);
-  const newDate = $derived<Day>(year === thisYear ? today : `${year}-01-01`);
 </script>
-
-<header class="top">
-  <RoundButton label="Monat" onclick={() => showMonth(monthTarget)}><Calendar size={18} strokeWidth={1.6} /></RoundButton>
-  <span class="balance amount" aria-label="Gesamt">{formatAmount(overviewTotal(data, year, today), true)}</span>
-  <RoundButton label="Settings" onclick={openSettings}><SlidersHorizontal size={18} strokeWidth={1.6} /></RoundButton>
-</header>
 
 <div class="cards">
   <Card
@@ -73,7 +61,7 @@
       <Card sub title={previousTitle} icon={RotateCcwClock} total={sum(previous)}>
         <div class="rows scroll">
           {#each previous as p (p.year)}
-            <button class="row" onclick={() => (ui.year = p.year)}>
+            <button class="row" onclick={() => setYear(p.year)}>
               <span>{p.year}</span><span class="amount">{formatAmount(p.total)}</span>
             </button>
           {/each}
@@ -116,32 +104,7 @@
   {/if}
 </div>
 
-<BottomBar
-  label={String(year)}
-  onAdd={() => newOneOff('overview', newDate)}
-  onPrev={() => (ui.year = year - 1)}
-  onNext={() => (ui.year = year + 1)}
-  onLabel={() => (ui.year = thisYear)}
-/>
-
 <style>
-  .top {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .balance {
-    display: flex;
-    align-items: center;
-    height: 34px;
-    padding: 0 16px;
-    border: 2px solid var(--frame);
-    border-radius: 17px;
-    font-size: 17px;
-    font-weight: 600;
-  }
   .cards {
     flex: 0 1 auto;
     min-height: 0;

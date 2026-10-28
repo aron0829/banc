@@ -1,24 +1,19 @@
 <script lang="ts">
-  import { House, Lock, SlidersHorizontal, Sprout } from '@lucide/svelte';
-  import { editCategory, editEntry, newOneOff, openSettings } from '../lib/actions';
+  import { Lock, Sprout } from '@lucide/svelte';
+  import { editCategory, editEntry } from '../lib/actions';
   import {
-    balance, categoryEntriesForMonth, categoryTotal, expenses, income, limitHint, scopeEntriesForMonth, scopeTotal, usedPercent,
+    categoryEntriesForMonth, categoryTotal, expenses, income, limitHint, scopeEntriesForMonth, scopeTotal, usedPercent,
   } from '../lib/calc';
-  import { addMonths, monthLabel, monthOf, yearOf, type Day } from '../lib/dates';
   import { visibleCategories, type Data, type Entry } from '../lib/model';
-  import { formatAmount } from '../lib/money';
   import { SCOPES } from '../lib/scopes';
   import { byCategory, byGroup } from '../lib/sections';
-  import { showYear, ui } from '../lib/ui.svelte';
-  import BottomBar from './BottomBar.svelte';
+  import { ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
   import EntryList from './EntryList.svelte';
-  import RoundButton from './RoundButton.svelte';
 
   let { data }: { data: Data } = $props();
 
   const today = $derived(ui.today);
-  const current = $derived(monthOf(today));
   const m = $derived(ui.month);
 
   // Always exactly one of the two is open: tapping switches.
@@ -31,17 +26,7 @@
 
   const percent = $derived(usedPercent(data, m));
   const hint = $derived(limitHint(data, m, today));
-  const label = $derived(yearOf(m) === yearOf(today) ? monthLabel(m) : `${monthLabel(m)} ${m.slice(2, 4)}`);
-  const newDate = $derived<Day>(m === current ? today : `${m}-01`);
 </script>
-
-<header class="top">
-  <RoundButton label="Übersicht" onclick={() => showYear(yearOf(m))}><House size={18} strokeWidth={1.6} /></RoundButton>
-  <button class="balance amount" aria-label="Bilanz {monthLabel(m)}" onclick={() => (ui.month = current)}>
-    {formatAmount(balance(data, m), true)}
-  </button>
-  <RoundButton label="Settings" onclick={openSettings}><SlidersHorizontal size={18} strokeWidth={1.6} /></RoundButton>
-</header>
 
 <div class="cards">
   <Card
@@ -99,32 +84,7 @@
   </p>
 {/if}
 
-<BottomBar
-  tone="expense"
-  {label}
-  onAdd={() => newOneOff('expense', newDate)}
-  onPrev={() => (ui.month = addMonths(m, -1))}
-  onNext={() => (ui.month = addMonths(m, 1))}
-  onLabel={() => (ui.month = current)}
-/>
-
 <style>
-  .top {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .balance {
-    height: 34px;
-    padding: 0 16px;
-    border: 2px solid var(--frame);
-    border-radius: 17px;
-    font-size: 17px;
-    font-weight: 600;
-  }
   .cards {
     flex: 0 1 auto;
     min-height: 0;

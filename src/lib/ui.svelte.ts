@@ -1,6 +1,6 @@
 import { flushSync, type Component } from 'svelte';
 import { monthOf, todayDay, yearOf, type Day, type Month } from './dates';
-import { rollToday } from './rules';
+import { monthInYear, rollToday } from './rules';
 
 export interface Popup {
   id: number;
@@ -10,7 +10,7 @@ export interface Popup {
 
 class UI {
   today = $state<Day>(todayDay());
-  view = $state<'month' | 'overview'>('month');
+  view = $state<View>('month');
   month = $state<Month>(monthOf(todayDay()));
   year = $state(yearOf(todayDay()));
   popups = $state.raw<Popup[]>([]);
@@ -48,7 +48,7 @@ export function closePopup(): void {
 export function refreshToday(): void {
   const now = todayDay();
   if (now === ui.today) return;
-  ui.month = rollToday(ui.today, now, ui.month);
+  setMonth(rollToday(ui.today, now, ui.month));
   ui.today = now;
 }
 
@@ -56,14 +56,26 @@ export function closeAllPopups(): void {
   ui.popups = [];
 }
 
-export function showMonth(m: Month): void {
+export type View = 'month' | 'overview';
+
+/** Month and year stay in step, so swiping between the two pages always shows matching periods. */
+export function setMonth(m: Month): void {
   ui.month = m;
-  ui.view = 'month';
+  ui.year = yearOf(m);
 }
 
-export function showYear(y: number): void {
+export function setYear(y: number): void {
   ui.year = y;
-  ui.view = 'overview';
+  if (yearOf(ui.month) !== y) ui.month = monthInYear(y, ui.today);
+}
+
+export function showView(v: View): void {
+  ui.view = v;
+}
+
+export function showMonth(m: Month): void {
+  setMonth(m);
+  ui.view = 'month';
 }
 
 export type Theme = 'light' | 'dark';

@@ -38,8 +38,9 @@
   <div class="screen" class:dim={focus.length > 0}>
     {#if kind === 'month' || kind === 'overview'}
       <header class="top">
-        <span class="round" class:p={true} class:hl={focus.includes('home')}>
-          {#if kind === 'month'}<House size={18} strokeWidth={1.6} />{:else}<Calendar size={18} strokeWidth={1.6} />{/if}
+        <span class="switch" class:p={true} class:hl={focus.includes('home')}>
+          <span class:on={kind === 'overview'}><House size={18} strokeWidth={1.6} /></span>
+          <span class:on={kind === 'month'}><Calendar size={18} strokeWidth={1.6} /></span>
         </span>
         <span class="balance" class:p={true} class:hl={focus.includes('balance')}>{kind === 'month' ? '+911.40 €' : '+4 862.15 €'}</span>
         <span class="round" class:p={true} class:hl={focus.includes('settings')}><SlidersHorizontal size={18} strokeWidth={1.6} /></span>
@@ -174,10 +175,38 @@
     outline-offset: 2px;
   }
   .top {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
     margin-bottom: 16px;
+  }
+  .top > :last-child {
+    justify-self: end;
+  }
+  .switch {
+    justify-self: start;
+    display: inline-flex;
+    gap: 2px;
+    height: 34px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: 17px;
+    background: var(--surface);
+  }
+  .switch > span {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+  }
+  .switch > .on {
+    border-color: var(--frame);
+    color: var(--text);
   }
   .round {
     width: 34px;

@@ -42,7 +42,7 @@
     },
     {
       title: 'Übersicht',
-      text: 'Das Haus oben links öffnet das Jahr: Bilanzen aller Monate, „Allgemein“ für Einmalposten und deine Schulden, die nicht zur Gesamtsumme zählen.',
+      text: 'Oben links wechselst du zwischen Übersicht (Haus) und Monat – oder wisch einfach nach rechts bzw. links. Die Übersicht zeigt das Jahr: Bilanzen aller Monate, „Allgemein“ für Einmalposten und deine Schulden, die nicht zur Gesamtsumme zählen.',
       kind: 'overview',
     },
     {
