@@ -35,7 +35,7 @@
     confirmDisabled?: boolean;
     onDelete?: () => void;
     onAdd?: () => void;
-    /** "+" becomes the big coloured button in the middle, ✓ moves small to its left. */
+    /** "+" becomes the big coloured button at the bottom. */
     addIsMain?: boolean;
     children?: Snippet;
   } = $props();
@@ -58,35 +58,44 @@
 
 <div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && dismiss()}>
   <div class="modal {tone}" role="dialog" aria-modal="true" aria-label={title ?? subtitle} tabindex="-1" onfocusin={focusin}>
-    {#if title}
-      <h2>{#if catIcon}<CatIcon name={catIcon} size={24} />{:else if icon}{@const I = icon}<I size={24} strokeWidth={1.6} />{/if}{title}</h2>
-    {/if}
+    <div class="head">
+      <span class="side">
+        {#if onCancel}
+          <RoundButton label="Abbrechen" size={30} onclick={onCancel}><X size={18} strokeWidth={2.2} /></RoundButton>
+        {/if}
+      </span>
+      {#if title}
+        <h2>{#if catIcon}<CatIcon name={catIcon} size={24} />{:else if icon}{@const I = icon}<I size={24} strokeWidth={1.6} />{/if}{title}</h2>
+      {:else}
+        <span></span>
+      {/if}
+      <span class="side end">
+        {#if onConfirm}
+          <!-- a real confirm (there is something to cancel) gets the coloured ring; a plain "done" stays quiet -->
+          <RoundButton label={onCancel ? 'Bestätigen' : 'Fertig'} size={onCancel ? 36 : 30} strong={!!onCancel} {tone} onclick={onConfirm} disabled={confirmDisabled}>
+            <Check size={onCancel ? 22 : 18} strokeWidth={2.2} />
+          </RoundButton>
+        {/if}
+      </span>
+    </div>
     {#if subtitle}
       <h3>{#if subtitleIcon}{@const S = subtitleIcon}<S size={19} strokeWidth={1.8} />{/if}{subtitle}</h3>
     {/if}
     {#if children}<div class="body">{@render children()}</div>{/if}
-    <div class="actions">
-      {#if addIsMain}
-        <RoundButton label="Fertig" size={30} onclick={onConfirm}><Check size={18} strokeWidth={2.2} /></RoundButton>
-        <RoundButton label="Hinzufügen" size={38} strong {tone} onclick={onAdd}><Plus size={22} strokeWidth={2.2} /></RoundButton>
-        <span class="slot"></span>
-      {:else}
-      {#if onCancel}
-        <RoundButton label="Abbrechen" size={30} onclick={onCancel}><X size={18} strokeWidth={2.2} /></RoundButton>
-      {/if}
-      {#if onConfirm}
-        <RoundButton label="Bestätigen" size={38} strong {tone} onclick={onConfirm} disabled={confirmDisabled}>
-          <Check size={22} strokeWidth={2.2} />
-        </RoundButton>
-      {/if}
-      {#if onAdd}
-        <RoundButton label="Hinzufügen" size={30} onclick={onAdd}><Plus size={20} strokeWidth={2.2} /></RoundButton>
-      {/if}
-      {#if onDelete}
-        <RoundButton label="Löschen" size={30} onclick={onDelete}><Trash size={15} strokeWidth={1.8} /></RoundButton>
-      {/if}
-      {/if}
-    </div>
+    {#if onAdd || onDelete}
+      <div class="actions">
+        {#if onAdd}
+          {#if addIsMain}
+            <RoundButton label="Hinzufügen" size={38} strong {tone} onclick={onAdd}><Plus size={22} strokeWidth={2.2} /></RoundButton>
+          {:else}
+            <RoundButton label="Hinzufügen" size={30} onclick={onAdd}><Plus size={20} strokeWidth={2.2} /></RoundButton>
+          {/if}
+        {/if}
+        {#if onDelete}
+          <RoundButton label="Löschen" size={30} onclick={onDelete}><Trash size={15} strokeWidth={1.8} /></RoundButton>
+        {/if}
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -100,9 +109,10 @@
     height: var(--vv-height, 100dvh);
     background: var(--overlay);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 20px;
+    /* every popup starts 200px below the top; less when the screen is short or the keyboard is up */
+    padding: calc(20px + clamp(0px, var(--vv-height, 100dvh) - 470px, 180px)) 20px 20px;
     z-index: 10;
   }
   .modal {
@@ -154,8 +164,17 @@
     flex-direction: column;
     gap: 12px;
   }
-  .slot {
-    width: 30px;
+  .head {
+    display: grid;
+    grid-template-columns: 36px 1fr 36px;
+    align-items: center;
+    gap: 8px;
+  }
+  .side {
+    display: flex;
+  }
+  .side.end {
+    justify-content: flex-end;
   }
   .actions {
     display: flex;
