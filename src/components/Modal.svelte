@@ -19,6 +19,7 @@
     onDelete,
     onAdd,
     addIsMain = false,
+    full = false,
     children,
   }: {
     tone?: Tone;
@@ -37,6 +38,8 @@
     onAdd?: () => void;
     /** "+" becomes the big coloured button at the bottom. */
     addIsMain?: boolean;
+    /** Covers the whole screen; the body takes the remaining height. */
+    full?: boolean;
     children?: Snippet;
   } = $props();
 
@@ -56,7 +59,7 @@
 
 <svelte:window onkeydown={key} />
 
-<div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && dismiss()}>
+<div class="overlay" class:full role="presentation" onclick={(e) => e.target === e.currentTarget && dismiss()}>
   <div class="modal {tone}" role="dialog" aria-modal="true" aria-label={title ?? subtitle} tabindex="-1" onfocusin={focusin}>
     <div class="head">
       <span class="side">
@@ -129,6 +132,21 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .overlay.full {
+    padding: 0;
+  }
+  .full .modal {
+    max-width: none;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: calc(16px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom));
+  }
+  .full .body {
+    flex: 1;
+    min-height: 0;
   }
   .modal::-webkit-scrollbar {
     display: none;

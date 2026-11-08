@@ -16,7 +16,7 @@
     },
     {
       title: 'Fix & Variable',
-      text: 'Fix zeigt, was dir im Monat bleibt: Einnahmen minus Fixkosten und Investments. In Variable stecken deine Kategorien wie Essen oder Shopping. Tipp auf eine Karte, um zwischen beiden zu wechseln, und auf eine Unterkarte, um sie aufzuklappen.',
+      text: 'Fix zeigt, was dir im Monat bleibt: Einnahmen minus Fixkosten und Investments. In Variable stecken deine Kategorien wie Essen oder Shopping. Tipp auf eine Karte, um sie auf- oder zuzuklappen.',
       focus: ['fix', 'variable'],
     },
     {
@@ -58,6 +58,10 @@
   ];
 
   let step = $state(0);
+  let shotWidth = $state(0);
+  let shotHeight = $state(0);
+  // as big as the free space allows, but not bigger than a real phone screen would look
+  const scale = $derived(Math.max(0.3, Math.min((shotWidth - 3) / 375, (shotHeight - 3) / 666, 0.9)));
   const s = $derived(steps[step]);
   const last = $derived(step === steps.length - 1);
 
@@ -69,9 +73,11 @@
 
 <svelte:window onkeydown={key} />
 
-<Modal title="Einführung" icon={Info} onClose={closePopup} onConfirm={closePopup}>
+<Modal title="Einführung" icon={Info} onClose={closePopup} onConfirm={closePopup} full>
   <div class="step">
-    <IntroScreen kind={s.kind} focus={s.focus} open={s.open} />
+    <div class="shot" bind:clientWidth={shotWidth} bind:clientHeight={shotHeight}>
+      <IntroScreen kind={s.kind} focus={s.focus} open={s.open} {scale} />
+    </div>
     <h4>{s.title}</h4>
     <p>{s.text}</p>
   </div>
@@ -88,11 +94,25 @@
 
 <style>
   .step {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 6px;
+  }
+  .shot {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
   h4 {
     margin: 8px 0 0;
@@ -109,6 +129,9 @@
     color: var(--muted);
   }
   .nav {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;

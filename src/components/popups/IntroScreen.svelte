@@ -12,7 +12,12 @@
   import CatIcon from '../CatIcon.svelte';
 
   // Drawn at phone size and scaled down, so it looks like the real app.
-  let { kind = 'month', focus = [], open }: { kind?: IntroKind; focus?: IntroPart[]; open?: 'essen' } = $props();
+  let {
+    kind = 'month',
+    focus = [],
+    open,
+    scale = 0.4627,
+  }: { kind?: IntroKind; focus?: IntroPart[]; open?: 'essen'; scale?: number } = $props();
 
   const expenses = [
     { name: 'Essen', icon: 'utensils', total: '186.40 €' },
@@ -34,15 +39,15 @@
   ];
 </script>
 
-<div class="frame" aria-hidden="true">
-  <div class="screen" class:dim={focus.length > 0}>
+<div class="frame" aria-hidden="true" style:width="{375 * scale + 3}px" style:height="{666 * scale + 3}px">
+  <div class="screen" class:dim={focus.length > 0} style:transform="scale({scale})">
     {#if kind === 'month' || kind === 'overview'}
       <header class="top">
         <span class="switch" class:p={true} class:hl={focus.includes('home')}>
           <span class:on={kind === 'overview'}><House size={18} strokeWidth={1.6} /></span>
           <span class:on={kind === 'month'}><Calendar size={18} strokeWidth={1.6} /></span>
         </span>
-        <span class="balance" class:p={true} class:hl={focus.includes('balance')}>{kind === 'month' ? '+911.40 €' : '+4 862.15 €'}</span>
+        <span class="balance plus" class:p={true} class:hl={focus.includes('balance')}>{kind === 'month' ? '+911.40 €' : '+4 862.15 €'}</span>
         <span class="round" class:p={true} class:hl={focus.includes('settings')}><SlidersHorizontal size={18} strokeWidth={1.6} /></span>
       </header>
 
@@ -133,10 +138,8 @@
 </div>
 
 <style>
-  /* 375 × 660 phone screen shown at 0.46 */
+  /* 375 × 666 phone screen, scaled to the space it gets */
   .frame {
-    width: 176px;
-    height: 312px;
     margin: 0 auto;
     border: 1.5px solid var(--frame);
     border-radius: 20px;
@@ -149,7 +152,6 @@
     width: 375px;
     height: 666px;
     padding: 20px 20px 16px;
-    transform: scale(0.4627);
     transform-origin: 0 0;
     display: flex;
     flex-direction: column;
@@ -226,6 +228,9 @@
     border-radius: 17px;
     font-size: 17px;
     font-weight: 600;
+  }
+  .balance.plus {
+    border-color: var(--income);
   }
   /* like the app: cards shrink to fit (the real ones scroll), the bottom bar stays visible */
   .cards {

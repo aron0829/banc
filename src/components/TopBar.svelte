@@ -15,6 +15,8 @@
     { view: 'overview', label: 'Übersicht', icon: House },
     { view: 'month', label: 'Monat', icon: Calendar },
   ];
+
+  const total = $derived(ui.view === 'month' ? balance(data, ui.month) : overviewTotal(data, ui.year, ui.today));
 </script>
 
 <header class="top">
@@ -27,11 +29,11 @@
     {/each}
   </div>
   {#if ui.view === 'month'}
-    <button class="balance amount" aria-label="Bilanz {monthLabel(ui.month)}" onclick={() => setMonth(monthOf(ui.today))}>
-      {formatAmount(balance(data, ui.month), true)}
+    <button class="balance amount" class:plus={total > 0} class:minus={total < 0} aria-label="Bilanz {monthLabel(ui.month)}" onclick={() => setMonth(monthOf(ui.today))}>
+      {formatAmount(total, true)}
     </button>
   {:else}
-    <span class="balance amount" aria-label="Gesamt">{formatAmount(overviewTotal(data, ui.year, ui.today), true)}</span>
+    <span class="balance amount" class:plus={total > 0} class:minus={total < 0} aria-label="Gesamt">{formatAmount(total, true)}</span>
   {/if}
   <span class="end"><RoundButton label="Settings" onclick={openSettings}><SlidersHorizontal size={18} strokeWidth={1.6} /></RoundButton></span>
 </header>
@@ -79,6 +81,12 @@
     border-radius: 17px;
     font-size: 17px;
     font-weight: 600;
+  }
+  .balance.plus {
+    border-color: var(--income);
+  }
+  .balance.minus {
+    border-color: var(--expense);
   }
   .end {
     justify-self: end;

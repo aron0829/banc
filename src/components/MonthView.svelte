@@ -15,15 +15,13 @@
 
   const m = $derived(ui.month);
 
-  // Always exactly one of the two is open: tapping switches.
-  let open = $state<'fix' | 'variable'>('variable');
-  let openSub = $state<string | null>(null);
+  // Every card opens and closes on its own.
+  let open = $state<Record<string, boolean>>({ variable: true });
 
   const FIX: Scope[] = ['income', 'fixed', 'invest'];
   const EMPTY: Partial<Record<Scope, string>> = { income: 'Keine Einnahmen', fixed: 'Keine Fixkosten', invest: 'Keine Investments' };
 
-  const toggle = () => (open = open === 'fix' ? 'variable' : 'fix');
-  const toggleSub = (id: string) => (openSub = openSub === id ? null : id);
+  const toggle = (id: string) => (open[id] = !open[id]);
   const tap = (e: Entry) => editEntry(data, e);
 
   const usage = $derived(budgetUsage(data, m));
@@ -31,7 +29,7 @@
 </script>
 
 <div class="cards">
-  <Card title="Fix" icon={Lock} total={budget(data, m)} open={open === 'fix'} fill onToggle={toggle}>
+  <Card title="Fix" icon={Lock} total={budget(data, m)} open={!!open.fix} fill onToggle={() => toggle('fix')}>
     {#each FIX as scope (scope)}
       <Card
         sub
@@ -40,8 +38,8 @@
         title={SCOPES[scope].title}
         icon={SCOPES[scope].icon}
         total={scopeTotal(data, scope, m)}
-        open={openSub === scope}
-        onToggle={() => toggleSub(scope)}
+        open={!!open[scope]}
+        onToggle={() => toggle(scope)}
       >
         <EntryList
           sections={byCategory(data, scope, scopeEntriesForMonth(data, scope, m), editCategory)}
@@ -52,7 +50,7 @@
     {/each}
   </Card>
 
-  <Card title="Variable" icon={LockOpen} total={scopeTotal(data, 'expense', m)} open={open === 'variable'} fill onToggle={toggle}>
+  <Card title="Variable" icon={LockOpen} total={scopeTotal(data, 'expense', m)} open={!!open.variable} fill onToggle={() => toggle('variable')}>
     {#each visibleCategories(data, 'expense') as c (c.id)}
       <Card
         sub
@@ -61,8 +59,8 @@
         title={c.name}
         catIcon={c.icon}
         total={categoryTotal(data, c.id, m)}
-        open={openSub === c.id}
-        onToggle={() => toggleSub(c.id)}
+        open={!!open[c.id]}
+        onToggle={() => toggle(c.id)}
         onLongPress={() => editCategory(c)}
       >
         <EntryList sections={byGroup(data, categoryEntriesForMonth(data, c.id, m))} onTap={tap} empty="Noch keine Einträge" />

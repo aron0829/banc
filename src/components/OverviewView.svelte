@@ -18,8 +18,8 @@
   const today = $derived(ui.today);
   const year = $derived(ui.year);
 
-  // One card open at a time; tapping a closed one opens it.
-  let open = $state<'year' | 'general' | 'debt'>('year');
+  // Every card opens and closes on its own.
+  let open = $state({ year: true, general: false, debt: false });
 
   const months = $derived(overviewMonths(data, year, today));
   const previous = $derived(previousYears(data, year, today));
@@ -41,9 +41,9 @@
     title="Jahresübersicht"
     icon={SCOPES.overview.icon}
     total={yearSummaryTotal(data, year, today)}
-    open={open === 'year'}
+    open={open.year}
     fill
-    onToggle={() => (open = 'year')}
+    onToggle={() => (open.year = !open.year)}
   >
     <Card sub title="Monatsvergleich" icon={Calendar} total={sum(months)}>
       <div class="rows scroll">
@@ -74,9 +74,9 @@
     title="Allgemein"
     icon={SCOPES.overview.icon}
     total={generalTotal(data, year)}
-    open={open === 'general'}
+    open={open.general}
     fill
-    onToggle={() => (open = 'general')}
+    onToggle={() => (open.general = !open.general)}
   >
     {#each generalCategories(data) as c (c.id)}
       <Card
@@ -95,7 +95,7 @@
   </Card>
 
   {#if debts.length}
-    <Card title="Schulden" catIcon={debts[0].icon} total={debtTotal} open={open === 'debt'} fill onToggle={() => (open = 'debt')}>
+    <Card title="Schulden" catIcon={debts[0].icon} total={debtTotal} open={open.debt} fill onToggle={() => (open.debt = !open.debt)}>
       {#each debts as c (c.id)}
         <EntryList sections={byGroup(data, debtEntries(data, c.id))} onTap={tap} empty="Keine Schulden" />
       {/each}
