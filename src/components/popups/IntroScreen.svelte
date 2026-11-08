@@ -1,13 +1,13 @@
 <script lang="ts" module>
   /** Parts of the example screen a step can point at. */
-  export type IntroPart = 'home' | 'balance' | 'settings' | 'income' | 'expense' | 'hint' | 'add' | 'pill' | 'info' | 'entry';
+  export type IntroPart = 'home' | 'balance' | 'settings' | 'fix' | 'variable' | 'hint' | 'add' | 'pill' | 'info' | 'entry';
   export type IntroKind = 'month' | 'overview' | 'entry' | 'settings';
 </script>
 
 <script lang="ts">
   import {
     BanknoteArrowDown, BanknoteArrowUp, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Euro, House, Info, LayoutGrid,
-    Lock, LogOut, Moon, Plus, RefreshCw, RotateCcwClock, ScrollText, SlidersHorizontal, Sprout, Sun, Tag, ToggleLeft, Trash, User, X,
+    Lock, LockOpen, LogOut, Moon, Plus, RefreshCw, RotateCcwClock, ScrollText, SlidersHorizontal, Sprout, Sun, Tag, ToggleLeft, Trash, User, X,
   } from '@lucide/svelte';
   import CatIcon from '../CatIcon.svelte';
 
@@ -48,13 +48,11 @@
 
       {#if kind === 'month'}
         <div class="cards">
-          <section class="card income" class:p={true} class:hl={focus.includes('income')}>
-            <div class="head"><BanknoteArrowUp size={22} strokeWidth={1.6} /><b>Einnahmen</b><span>2400.00 €</span></div>
+          <section class="card" class:p={true} class:hl={focus.includes('fix')}>
+            <div class="head"><Lock size={22} strokeWidth={1.6} /><b>Fix</b><span>1280.00 €</span></div>
           </section>
-          <section class="card expense" class:p={true} class:hl={focus.includes('expense')}>
-            <div class="head"><BanknoteArrowDown size={22} strokeWidth={1.6} /><b>Ausgaben</b><span>1488.60 €</span></div>
-            <div class="sub"><Sprout size={19} strokeWidth={1.8} /><i>Investments</i><span>300.00 €</span></div>
-            <div class="sub"><Lock size={19} strokeWidth={1.8} /><i>Fixkosten</i><span>820.00 €</span></div>
+          <section class="card variable" class:p={true} class:hl={focus.includes('variable')}>
+            <div class="head"><LockOpen size={22} strokeWidth={1.6} /><b>Variable</b><span>368.60 €</span></div>
             {#each expenses as c (c.name)}
               <div class="sub" class:opened={open === 'essen' && c.name === 'Essen'}>
                 <div class="subhead"><CatIcon name={c.icon} size={19} /><i>{c.name}</i><span>{c.total}</span></div>
@@ -69,7 +67,7 @@
             {/each}
           </section>
         </div>
-        <p class="hint" class:p={true} class:hl={focus.includes('hint')}><b>Du bleibst voraussichtlich im Limit</b><br />62 % verbraucht</p>
+        <p class="hint" class:p={true} class:hl={focus.includes('hint')}><b>29 % verbraucht</b><br />369 € / 1280 €</p>
       {:else}
         <div class="cards">
           <section class="card">
@@ -240,7 +238,7 @@
   .card {
     flex: none;
   }
-  .card.expense {
+  .card.variable {
     flex: 0 1 auto;
     min-height: 0;
     overflow: hidden;
@@ -251,13 +249,7 @@
     background: var(--surface);
     padding: 4px 14px 4px;
   }
-  .card.income {
-    border-color: var(--income);
-    background: var(--income-bg);
-  }
-  .card.expense {
-    border-color: var(--expense);
-    background: var(--expense-bg);
+  .card.variable {
     padding-bottom: 14px;
   }
   .head,
@@ -285,8 +277,8 @@
     border-radius: 20px;
     background: var(--surface);
   }
-  .expense .sub {
-    border-color: var(--expense-line);
+  .variable .sub {
+    border-color: var(--expense);
   }
   .sub:first-of-type {
     margin-top: 2px;

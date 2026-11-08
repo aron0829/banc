@@ -11,17 +11,17 @@
     },
     {
       title: 'Bilanz',
-      text: 'Oben in der Mitte steht die Bilanz des Monats: Einnahmen minus Ausgaben. Antippen springt zum aktuellen Monat.',
+      text: 'Oben in der Mitte steht die Bilanz des Monats: Fix minus Variable. Antippen springt zum aktuellen Monat.',
       focus: ['balance'],
     },
     {
-      title: 'Einnahmen & Ausgaben',
-      text: 'Tipp auf eine Karte, um zwischen beiden zu wechseln. In den Ausgaben stecken Investments, Fixkosten und deine Kategorien – antippen klappt sie auf.',
-      focus: ['income', 'expense'],
+      title: 'Fix & Variable',
+      text: 'Fix zeigt, was dir im Monat bleibt: Einnahmen minus Fixkosten und Investments. In Variable stecken deine Kategorien wie Essen oder Shopping. Tipp auf eine Karte, um zwischen beiden zu wechseln, und auf eine Unterkarte, um sie aufzuklappen.',
+      focus: ['fix', 'variable'],
     },
     {
       title: 'Ausgabe eintragen',
-      text: 'Mit dem + trägst du eine neue Ausgabe ein. Darüber siehst du, wie viel Prozent deiner Einnahmen schon verbraucht sind.',
+      text: 'Mit dem + trägst du eine neue Ausgabe ein. Darüber siehst du, wie viel von Fix schon verbraucht ist.',
       focus: ['add', 'hint'],
     },
     {
@@ -32,7 +32,7 @@
     {
       title: 'Bearbeiten',
       text: 'Tipp auf einen Eintrag, um ihn zu ändern oder zu löschen. Halte eine Kategorie gedrückt, um Name und Icon zu ändern. Gelöschtes landet im Papierkorb.',
-      focus: ['expense', 'entry'],
+      focus: ['variable', 'entry'],
       open: 'essen',
     },
     {

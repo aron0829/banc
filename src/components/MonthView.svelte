@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Lock, Sprout } from '@lucide/svelte';
+  import { Lock, LockOpen } from '@lucide/svelte';
   import { editCategory, editEntry } from '../lib/actions';
   import {
-    categoryEntriesForMonth, categoryTotal, expenses, income, limitHint, scopeEntriesForMonth, scopeTotal, usedPercent,
+    budget, budgetUsage, categoryEntriesForMonth, categoryTotal, scopeEntriesForMonth, scopeTotal,
   } from '../lib/calc';
-  import { visibleCategories, type Data, type Entry } from '../lib/model';
+  import { visibleCategories, type Data, type Entry, type Scope } from '../lib/model';
   import { SCOPES } from '../lib/scopes';
   import { byCategory, byGroup } from '../lib/sections';
   import { ui } from '../lib/ui.svelte';
@@ -13,56 +13,50 @@
 
   let { data }: { data: Data } = $props();
 
-  const today = $derived(ui.today);
   const m = $derived(ui.month);
 
   // Always exactly one of the two is open: tapping switches.
-  let open = $state<'income' | 'expense'>('expense');
+  let open = $state<'fix' | 'variable'>('variable');
   let openSub = $state<string | null>(null);
 
-  const toggle = () => (open = open === 'income' ? 'expense' : 'income');
+  const FIX: Scope[] = ['income', 'fixed', 'invest'];
+  const EMPTY: Partial<Record<Scope, string>> = { income: 'Keine Einnahmen', fixed: 'Keine Fixkosten', invest: 'Keine Investments' };
+
+  const toggle = () => (open = open === 'fix' ? 'variable' : 'fix');
   const toggleSub = (id: string) => (openSub = openSub === id ? null : id);
   const tap = (e: Entry) => editEntry(data, e);
 
-  const percent = $derived(usedPercent(data, m));
-  const hint = $derived(limitHint(data, m, today));
+  const usage = $derived(budgetUsage(data, m));
+  const euros = (cents: number) => `${Math.round(cents / 100)} €`;
 </script>
 
 <div class="cards">
-  <Card
-    title={SCOPES.income.title}
-    icon={SCOPES.income.icon}
-    total={income(data, m)}
-    tone="income"
-    open={open === 'income'}
-    fill
-    onToggle={toggle}
-  >
-    <EntryList
-      sections={byCategory(data, 'income', scopeEntriesForMonth(data, 'income', m), editCategory)}
-      onTap={tap}
-      empty="Keine Einnahmen – in den Settings hinzufügen"
-    />
+  <Card title="Fix" icon={Lock} total={budget(data, m)} open={open === 'fix'} fill onToggle={toggle}>
+    {#each FIX as scope (scope)}
+      <Card
+        sub
+        accent
+        tone={SCOPES[scope].tone}
+        title={SCOPES[scope].title}
+        icon={SCOPES[scope].icon}
+        total={scopeTotal(data, scope, m)}
+        open={openSub === scope}
+        onToggle={() => toggleSub(scope)}
+      >
+        <EntryList
+          sections={byCategory(data, scope, scopeEntriesForMonth(data, scope, m), editCategory)}
+          onTap={tap}
+          empty="{EMPTY[scope]} – in den Settings hinzufügen"
+        />
+      </Card>
+    {/each}
   </Card>
 
-  <Card
-    title={SCOPES.expense.title}
-    icon={SCOPES.expense.icon}
-    total={expenses(data, m)}
-    tone="expense"
-    open={open === 'expense'}
-    fill
-    onToggle={toggle}
-  >
-    <Card sub tone="expense" title="Investments" icon={Sprout} total={scopeTotal(data, 'invest', m)} open={openSub === 'invest'} onToggle={() => toggleSub('invest')}>
-      <EntryList sections={byCategory(data, 'invest', scopeEntriesForMonth(data, 'invest', m), editCategory)} onTap={tap} empty="Keine Investments – in den Settings hinzufügen" />
-    </Card>
-    <Card sub tone="expense" title="Fixkosten" icon={Lock} total={scopeTotal(data, 'fixed', m)} open={openSub === 'fixed'} onToggle={() => toggleSub('fixed')}>
-      <EntryList sections={byCategory(data, 'fixed', scopeEntriesForMonth(data, 'fixed', m), editCategory)} onTap={tap} empty="Keine Fixkosten – in den Settings hinzufügen" />
-    </Card>
+  <Card title="Variable" icon={LockOpen} total={scopeTotal(data, 'expense', m)} open={open === 'variable'} fill onToggle={toggle}>
     {#each visibleCategories(data, 'expense') as c (c.id)}
       <Card
         sub
+        accent
         tone="expense"
         title={c.name}
         catIcon={c.icon}
@@ -77,10 +71,10 @@
   </Card>
 </div>
 
-{#if percent !== null}
+{#if usage}
   <p class="hint">
-    {#if hint}<b>{hint}</b><br />{/if}
-    {percent} % verbraucht
+    {#if usage.percent !== null}<b>{usage.percent} % verbraucht</b><br />{/if}
+    {euros(usage.spent)} / {euros(usage.budget)}
   </p>
 {/if}
 

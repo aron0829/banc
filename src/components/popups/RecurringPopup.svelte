@@ -31,12 +31,12 @@
   const data = $derived(app.data!);
   const amount = $derived(parseAmount(amountText));
   const category = $derived(categoryId ? categoryOf(data, categoryId) : undefined);
-  const rangeOk = $derived(to === null || to > from);
+  const rangeOk = $derived(to === null || to >= from);
   const valid = $derived(amountAllowed(scope, amount) && !!category && !category.deleted && rangeOk);
   const tone = $derived(SCOPES[scope].tone);
 
   const pickFrom = () => openPopup(MonthPicker, { title: 'Von', value: from, tone, onPick: (m: Month | null) => m && (from = m) });
-  const pickTo = () => openPopup(MonthPicker, { title: 'Bis', value: to, tone, allowUnlimited: true, after: from, onPick: (m: Month | null) => (to = m) });
+  const pickTo = () => openPopup(MonthPicker, { title: 'Bis', value: to, tone, allowUnlimited: true, notBefore: from, onPick: (m: Month | null) => (to = m) });
 
   function save() {
     if (!valid) return;

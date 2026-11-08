@@ -9,15 +9,15 @@
     title,
     value,
     allowUnlimited = false,
-    after,
+    notBefore,
     tone = 'neutral',
     onPick,
   }: {
     title: string;
     value: Month | null;
     allowUnlimited?: boolean;
-    /** Only months after this one can be picked ("Bis" after "Von"). */
-    after?: Month;
+    /** Only this month and later ones can be picked ("Bis" from "Von" on). */
+    notBefore?: Month;
     tone?: Tone;
     onPick: (m: Month | null) => void;
   } = $props();
@@ -40,7 +40,7 @@
   </div>
   <div class="grid">
     {#each monthsOfYear(year) as m, i (m)}
-      <button class="m {tone}" class:on={m === value} disabled={!!after && m <= after} onclick={() => pick(m)}>{SHORT[i]}</button>
+      <button class="m {tone}" class:on={m === value} disabled={!!notBefore && m < notBefore} onclick={() => pick(m)}>{SHORT[i]}</button>
     {/each}
   </div>
   {#if allowUnlimited}

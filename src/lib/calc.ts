@@ -1,4 +1,4 @@
-import { daysInMonth, monthOf, monthsOfYear, yearOf, type Day, type Month } from './dates';
+import { monthOf, monthsOfYear, yearOf, type Day, type Month } from './dates';
 import { categoryOf, generalCategories, groupOf, isVisible, type Data, type Entry, type Group, type Scope } from './model';
 
 const sum = (entries: Entry[]) => entries.reduce((s, e) => s + e.amount, 0);
@@ -35,20 +35,15 @@ export function expenses(data: Data, m: Month): number {
 
 export const balance = (data: Data, m: Month) => income(data, m) - expenses(data, m);
 
-export function usedPercent(data: Data, m: Month): number | null {
-  const inc = income(data, m);
-  return inc === 0 ? null : Math.round((expenses(data, m) / inc) * 100);
-}
+/** "Fix": what is left for variable spending = Einnahmen − Fixkosten − Investments. */
+export const budget = (data: Data, m: Month) => income(data, m) - scopeTotal(data, 'fixed', m) - scopeTotal(data, 'invest', m);
 
-export function limitHint(data: Data, m: Month, today: Day): string | null {
-  const inc = income(data, m);
-  const now = monthOf(today);
-  if (inc === 0 || m > now) return null;
-  if (m < now) return 'Monat abgeschlossen';
-  const fixed = scopeTotal(data, 'invest', m) + scopeTotal(data, 'fixed', m);
-  const day = Number(today.slice(8, 10));
-  const projected = fixed + (scopeTotal(data, 'expense', m) / day) * daysInMonth(m);
-  return projected > inc ? 'Du erreichst dein Monatslimit voraussichtlich vorzeitig' : 'Du bleibst voraussichtlich im Limit';
+/** How much of the budget the variable spending has used. */
+export function budgetUsage(data: Data, m: Month): { spent: number; budget: number; percent: number | null } | null {
+  if (income(data, m) === 0) return null;
+  const left = budget(data, m);
+  const spent = scopeTotal(data, 'expense', m);
+  return { spent, budget: left, percent: left > 0 ? Math.round((spent / left) * 100) : null };
 }
 
 export function hasActivity(data: Data, m: Month): boolean {
@@ -127,23 +122,24 @@ export interface EntryRow {
   entries: Entry[];
 }
 
-/** Groups (in order of first appearance, entries by date) first, then ungrouped entries as one row without group. */
+/**
+ * Newest first: a group sits where its newest entry is, ungrouped entries in between become rows without group.
+ * Entries of the same day keep the newest added on top.
+ */
 export function groupedEntries(data: Data, entries: Entry[]): EntryRow[] {
-  const byDate = [...entries].sort((a, b) => (a.date ?? a.from ?? '').localeCompare(b.date ?? b.from ?? ''));
+  const newest = [...entries].reverse().sort((a, b) => (b.date ?? b.from ?? '').localeCompare(a.date ?? a.from ?? ''));
   const rows = new Map<string, EntryRow>();
-  const loose: Entry[] = [];
-  for (const e of byDate) {
+  const out: EntryRow[] = [];
+  for (const e of newest) {
     const g = groupOf(data, e.groupId);
-    if (!g) {
-      loose.push(e);
-      continue;
+    let row = g ? rows.get(g.id) : out.at(-1)?.group ? undefined : out.at(-1);
+    if (!row) {
+      row = { group: g, total: 0, entries: [] };
+      if (g) rows.set(g.id, row);
+      out.push(row);
     }
-    const row = rows.get(g.id) ?? { group: g, total: 0, entries: [] };
     row.total += e.amount;
     row.entries.push(e);
-    rows.set(g.id, row);
   }
-  const out = [...rows.values()];
-  if (loose.length) out.push({ total: sum(loose), entries: loose });
   return out;
 }

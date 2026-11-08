@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  balance, categoryTotal, expenses, groupedEntries, hasActivity, income, isActive, limitHint,
+  balance, budgetUsage, categoryTotal, expenses, groupedEntries, hasActivity, income, isActive,
   debtEntries, effectiveStart, generalTotal, overviewCategoryTotal, overviewMonths, overviewTotal, ownYearResult, previousYears,
-  scopeTotal, usedPercent, yearSummaryTotal,
+  scopeTotal, yearSummaryTotal,
 } from './calc';
 import type { Category, Data, Entry, Scope } from './model';
 
@@ -68,36 +68,19 @@ describe('month (design scenario October 2026)', () => {
     expect(expenses(d, '2026-10')).toBe(57200 + 10000 + 1500);
     expect(balance(d, '2026-10')).toBe(112800 - 68700);
   });
-  it('computes used percent = Ausgaben / Einnahmen', () => {
-    expect(usedPercent(d, '2026-10')).toBe(Math.round((68700 / 112800) * 100));
+  it('computes the budget usage = variable spending / (Einnahmen - Fixkosten - Investments)', () => {
+    const budget = 112800 - 57200 - 10000;
+    expect(budgetUsage(d, '2026-10')).toEqual({ spent: 1500, budget, percent: Math.round((1500 / budget) * 100) });
   });
-  it('returns null used percent without income', () => expect(usedPercent(d, '2021-01')).toBeNull());
+  it('returns no budget usage without income', () => expect(budgetUsage(d, '2021-01')).toBeNull());
+  it('leaves out the percent when nothing is left after fixed costs', () => {
+    const tight: Data = { ...d, entries: [...d.entries, entry('wohnen', 50000, { from: '2026-10', to: '2026-10' })] };
+    expect(budgetUsage(tight, '2026-10')?.percent).toBeNull();
+  });
   it('detects activity from recurring or one-off entries', () => {
     expect(hasActivity(d, '2026-10')).toBe(true);
     expect(hasActivity(d, '2021-01')).toBe(false);
   });
-});
-
-describe('limitHint', () => {
-  const d = base();
-  d.entries = [
-    entry('wohnen', 5000, { from: '2026-10', to: null }),
-    entry('crypto', 5000, { from: '2026-10', to: null }),
-    entry('essen', 10000, { date: '2026-10-05' }),
-  ];
-  const withIncome = (cents: number): Data => ({ ...d, entries: [...d.entries, entry('job', cents, { from: '2026-10', to: null })] });
-  it('warns when the projection exceeds income in the current month', () => {
-    // 100 + 100 / 10 * 31 = 410 > 300
-    expect(limitHint(withIncome(30000), '2026-10', '2026-10-10')).toBe('Du erreichst dein Monatslimit voraussichtlich vorzeitig');
-  });
-  it('reassures when the projection stays within income', () => {
-    expect(limitHint(withIncome(50000), '2026-10', '2026-10-10')).toBe('Du bleibst voraussichtlich im Limit');
-  });
-  it('says closed for past months and nothing for future months', () => {
-    expect(limitHint(withIncome(50000), '2026-10', '2026-11-03')).toBe('Monat abgeschlossen');
-    expect(limitHint(withIncome(50000), '2026-11', '2026-10-10')).toBeNull();
-  });
-  it('shows nothing without income', () => expect(limitHint(d, '2026-10', '2026-10-10')).toBeNull());
 });
 
 describe('overview', () => {
@@ -168,16 +151,25 @@ describe('deleted things do not count', () => {
 });
 
 describe('groupedEntries', () => {
-  it('puts groups first with totals, then ungrouped entries', () => {
+  const rowsOf = (d: Data, entries: Entry[]) =>
+    groupedEntries(d, entries).map((r) => [r.group?.name ?? null, r.total, r.entries.map((e) => e.amount)]);
+  it('lists newest first, a group where its newest entry is', () => {
     const d = base();
     const a = entry('essen', 1000, { date: '2026-10-01', groupId: 'g1' });
     const b = entry('essen', 500, { date: '2026-10-13' });
     const c = entry('essen', 200, { date: '2026-10-02', groupId: 'g1' });
-    const rows = groupedEntries(d, [b, a, c]);
-    expect(rows.map((r) => [r.group?.name ?? null, r.total, r.entries.map((e) => e.amount)])).toEqual([
-      ['Group 1', 1200, [1000, 200]],
+    const e = entry('essen', 50, { date: '2026-10-01' });
+    expect(rowsOf(d, [b, a, c, e])).toEqual([
       [null, 500, [500]],
+      ['Group 1', 1200, [200, 1000]],
+      [null, 50, [50]],
     ]);
+  });
+  it('puts the newest added entry of the same day on top', () => {
+    const d = base();
+    const older = entry('essen', 1, { date: '2026-10-05' });
+    const newer = entry('essen', 2, { date: '2026-10-05' });
+    expect(rowsOf(d, [older, newer])).toEqual([[null, 3, [2, 1]]]);
   });
 });
 

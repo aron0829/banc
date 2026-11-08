@@ -30,10 +30,10 @@ export function byCategory(data: Data, scope: Scope, entries: Entry[], onLongPre
     .filter((s) => s.entries.length > 0);
 }
 
-/** Groups with totals, then ungrouped entries as top-level rows. */
+/** Newest first: groups with totals, ungrouped entries as top-level rows in between. */
 export function byGroup(data: Data, entries: Entry[]): ListSection[] {
-  return groupedEntries(data, entries).map((r) =>
-    r.group ? { key: r.group.id, label: r.group.name, total: r.total, entries: r.entries } : { key: 'loose', entries: r.entries },
+  return groupedEntries(data, entries).map((r, i) =>
+    r.group ? { key: r.group.id, label: r.group.name, total: r.total, entries: r.entries } : { key: `loose-${i}`, entries: r.entries },
   );
 }
 
