@@ -11,12 +11,12 @@
     },
     {
       title: 'Bilanz',
-      text: 'Oben in der Mitte steht die Bilanz des Monats: Fix minus Variable. Antippen springt zum aktuellen Monat.',
+      text: 'Oben in der Mitte steht die Bilanz des Monats: Fix plus/minus Variabel. Antippen springt zum aktuellen Monat.',
       focus: ['balance'],
     },
     {
-      title: 'Fix & Variable',
-      text: 'Fix zeigt, was dir im Monat bleibt: Einnahmen minus Fixkosten und Investments. In Variable stecken deine Kategorien wie Essen oder Shopping. Tipp auf eine Karte, um sie auf- oder zuzuklappen.',
+      title: 'Fix & Variabel',
+      text: 'Fix zeigt, was dir im Monat bleibt: Einnahmen minus Fixkosten und Investments. In Variabel stecken deine Kategorien wie Essen oder Shopping. Tipp auf eine Karte, um sie auf- oder zuzuklappen.',
       focus: ['fix', 'variable'],
     },
     {
@@ -47,8 +47,13 @@
     },
     {
       title: 'Settings',
-      text: 'Oben rechts legst du Wiederkehrendes an – Einnahmen, Fixkosten und Investments mit Zeitraum. Die landen jeden Monat automatisch in der Liste.',
+      text: 'Oben rechts legst du Wiederkehrendes an – Einnahmen, Fixkosten und Investments mit Zeitraum. Die landen jeden Monat automatisch in der Liste. Darunter schaltest du „Variable Einnahmen“ und den dunklen Modus ein.',
       kind: 'settings',
+    },
+    {
+      title: 'Variable Einnahmen',
+      text: 'Für Geld pro Stunde, z. B. einen Nebenjob: In den Settings einschalten, dann im +-Popup mit den Pfeilen wechseln und nur die Stunden eintragen. Der Betrag kommt aus dem Stundenlohn und steht grün oben in Variabel.',
+      kind: 'varIncome',
     },
     {
       title: 'Fertig',
@@ -123,7 +128,7 @@
     width: 100%;
     margin: 0;
     /* fits the longest step, so the popup doesn't jump while paging */
-    min-height: 84px;
+    min-height: 105px;
     font-size: 14px;
     line-height: 1.5;
     color: var(--muted);

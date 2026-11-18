@@ -1,13 +1,13 @@
 <script lang="ts" module>
   /** Parts of the example screen a step can point at. */
   export type IntroPart = 'home' | 'balance' | 'settings' | 'fix' | 'variable' | 'hint' | 'add' | 'pill' | 'info' | 'entry';
-  export type IntroKind = 'month' | 'overview' | 'entry' | 'settings';
+  export type IntroKind = 'month' | 'overview' | 'entry' | 'varIncome' | 'settings';
 </script>
 
 <script lang="ts">
   import {
-    BanknoteArrowDown, BanknoteArrowUp, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Euro, House, Info, LayoutGrid,
-    Lock, LockOpen, LogOut, Moon, Plus, RefreshCw, RotateCcwClock, ScrollText, SlidersHorizontal, Sprout, Sun, Tag, ToggleLeft, Trash, User, X,
+    BanknoteArrowDown, BanknoteArrowUp, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, Euro, House, Info,
+    LayoutGrid, Lock, LockOpen, LogOut, Moon, Plus, RefreshCw, RotateCcwClock, ScrollText, SlidersHorizontal, Sprout, Tag, Trash, User, X,
   } from '@lucide/svelte';
   import CatIcon from '../CatIcon.svelte';
 
@@ -57,7 +57,7 @@
             <div class="head"><Lock size={22} strokeWidth={1.6} /><b>Fix</b><span>1280.00 €</span></div>
           </section>
           <section class="card variable" class:p={true} class:hl={focus.includes('variable')}>
-            <div class="head"><LockOpen size={22} strokeWidth={1.6} /><b>Variable</b><span>368.60 €</span></div>
+            <div class="head"><LockOpen size={22} strokeWidth={1.6} /><b>Variabel</b><span>368.60 €</span></div>
             {#each expenses as c (c.name)}
               <div class="sub" class:opened={open === 'essen' && c.name === 'Essen'}>
                 <div class="subhead"><CatIcon name={c.icon} size={19} /><i>{c.name}</i><span>{c.total}</span></div>
@@ -122,6 +122,27 @@
           <span class="round big expense"><Check size={22} strokeWidth={2.2} /></span>
         </div>
       </div>
+    {:else if kind === 'varIncome'}
+      <div class="modal income">
+        <h2 class="switchable"><ChevronLeft size={20} /><span><CircleDollarSign size={24} strokeWidth={1.6} />Variable Einnahmen</span><ChevronRight size={20} /></h2>
+        <h3><Plus size={19} strokeWidth={1.8} />Eintrag hinzufügen</h3>
+        <div class="field"><Tag size={18} strokeWidth={1.7} /><b>Name</b><span class="muted">Optional</span></div>
+        <div class="field"><ChevronLeft size={20} /><b class="center">Sa, 25.10.2026</b><ChevronRight size={20} /></div>
+        <div class="field"><Clock3 size={18} strokeWidth={1.7} /><b>Stunden</b><span>5</span></div>
+        <div class="field block">
+          <div class="line"><LayoutGrid size={18} strokeWidth={1.7} /><b>Art</b><span class="muted">Gruppe <ChevronDown size={18} /></span></div>
+          <div class="art">
+            <span class="cat on"><CatIcon name="drama" size={20} /></span>
+            <span class="cat"><CatIcon name="coffee" size={20} /></span>
+            <span class="plain"><Plus size={16} strokeWidth={2} /></span>
+          </div>
+          <p class="artname">Oper (15 € / h) · 75.00 €</p>
+        </div>
+        <div class="actions">
+          <span class="round small"><X size={18} strokeWidth={2.2} /></span>
+          <span class="round big income"><Check size={22} strokeWidth={2.2} /></span>
+        </div>
+      </div>
     {:else}
       <div class="modal">
         <h2><SlidersHorizontal size={24} strokeWidth={1.6} />Settings</h2>
@@ -129,7 +150,8 @@
         <div class="row expense"><Lock size={18} strokeWidth={1.6} /><span>Fixkosten</span><RefreshCw size={20} strokeWidth={1.6} /></div>
         <div class="row expense"><Sprout size={18} strokeWidth={1.6} /><span>Investments</span><RefreshCw size={20} strokeWidth={1.6} /></div>
         <div class="row"><Trash size={18} strokeWidth={1.6} /><span>Papierkorb</span><RefreshCw size={20} strokeWidth={1.6} /></div>
-        <div class="row"><ToggleLeft size={18} strokeWidth={1.6} /><span>Modus</span><span class="mode on"><Sun size={17} strokeWidth={1.6} /></span><span class="mode"><Moon size={17} strokeWidth={1.6} /></span></div>
+        <div class="row"><CircleDollarSign size={18} strokeWidth={1.6} /><span>Variable Einnahmen</span><span class="toggle on"></span></div>
+        <div class="row"><Moon size={18} strokeWidth={1.6} /><span>Modus</span><span class="toggle"></span></div>
         <div class="row"><User size={18} strokeWidth={1.6} /><span>Profil: aron</span><LogOut size={20} strokeWidth={1.6} /></div>
         <div class="actions"><span class="round big"><Check size={22} strokeWidth={2.2} /></span></div>
       </div>
@@ -397,6 +419,28 @@
   .modal.expense {
     border-color: var(--expense);
   }
+  .modal.income {
+    border-color: var(--income);
+  }
+  .modal.income .field {
+    border-color: var(--income-line);
+  }
+  .modal.income .cat.on {
+    border-color: var(--income);
+  }
+  h2.switchable {
+    justify-content: space-between;
+  }
+  h2.switchable span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .plain {
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.5;
+  }
   h2,
   h3 {
     margin: 0;
@@ -493,6 +537,9 @@
   .big.expense {
     border-color: var(--expense);
   }
+  .big.income {
+    border-color: var(--income);
+  }
   .row {
     display: flex;
     align-items: center;
@@ -503,7 +550,7 @@
     border-radius: 20px;
     font-weight: 600;
   }
-  .row > span:not(.mode) {
+  .row > span:not(.toggle) {
     flex: 1;
   }
   .row.income {
@@ -512,16 +559,30 @@
   .row.expense {
     border-color: var(--expense);
   }
-  .mode {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid transparent;
+  /* same look as the real Switch */
+  .toggle {
+    position: relative;
+    width: 42px;
+    height: 22px;
+    border-radius: 11px;
+    border: 1px solid var(--frame);
+    flex: none;
   }
-  .mode.on {
-    border-color: var(--frame);
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--frame);
+  }
+  .toggle.on {
+    background: var(--frame);
+  }
+  .toggle.on::after {
+    left: 25px;
+    background: var(--surface);
   }
 </style>
