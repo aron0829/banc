@@ -1,15 +1,33 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { editCategory } from '../lib/actions';
   import { longpress } from '../lib/longpress';
-  import { visibleCategories, type Scope } from '../lib/model';
+  import { visibleCategories, type Category, type Scope } from '../lib/model';
   import type { Tone } from '../lib/scopes';
   import { app } from '../lib/sync.svelte';
   import CatIcon from './CatIcon.svelte';
 
-  let { scope, selected, onSelect, tone = 'neutral' }: { scope: Scope; selected?: string; onSelect: (id: string) => void; tone?: Tone } = $props();
+  let {
+    scope,
+    selected,
+    onSelect,
+    tone = 'neutral',
+    caption = (c) => c.name,
+    children,
+  }: {
+    scope: Scope;
+    selected?: string;
+    onSelect: (id: string) => void;
+    tone?: Tone;
+    /** Text below the icons for the selected category. */
+    caption?: (c: Category) => string;
+    /** Extra buttons after the icons (e.g. "+"). */
+    children?: Snippet;
+  } = $props();
 
   const categories = $derived(app.data ? visibleCategories(app.data, scope) : []);
-  const name = $derived(categories.find((c) => c.id === selected)?.name);
+  const current = $derived(categories.find((c) => c.id === selected));
+  const name = $derived(current && caption(current));
 </script>
 
 <div class="art">
@@ -26,6 +44,7 @@
       <CatIcon name={c.icon} size={20} />
     </button>
   {/each}
+  {@render children?.()}
 </div>
 {#if name}<p class="name">{name}</p>{/if}
 

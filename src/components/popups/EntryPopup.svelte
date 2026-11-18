@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Euro, LayoutGrid, Plus, SquarePen, Tag } from '@lucide/svelte';
+  import { switchOneOff } from '../../lib/actions';
   import { addDays, shortDate, todayDay, yearOf, type Day } from '../../lib/dates';
   import { focusNow } from '../../lib/focus';
   import { categoryOf, groupOf, signOf, visibleCategories, type Entry } from '../../lib/model';
@@ -93,6 +94,7 @@
   onConfirm={save}
   confirmDisabled={!valid}
   onDelete={entry ? remove : undefined}
+  onSwitch={scope === 'expense' && !entry && data.variableIncome ? () => switchOneOff('expense', date) : undefined}
 >
   <Field icon={Tag} label="Name" {tone}>
     <input bind:value={name} placeholder="Optional" aria-label="Name" />

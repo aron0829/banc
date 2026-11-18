@@ -2,7 +2,7 @@
   import { ArchiveRestore, Trash } from '@lucide/svelte';
   import type { Entry } from '../../lib/model';
   import { restoreCategory, restoreEntry, restoreGroup, trash, type TrashSection } from '../../lib/ops';
-  import { entryWhen, type ListSection } from '../../lib/sections';
+  import { entryName, entryWhen, type ListSection } from '../../lib/sections';
   import { app, commit } from '../../lib/sync.svelte';
   import { closePopup, openPopup } from '../../lib/ui.svelte';
   import EntryList from '../EntryList.svelte';
@@ -20,7 +20,7 @@
       icon: Trash,
       subtitle: 'Eintrag wiederherstellen?',
       subtitleIcon: ArchiveRestore,
-      rows: [{ label: `${label(s)}: ${e.name || '–'} ${entryWhen(e)}`, amount: e.amount }],
+      rows: [{ label: `${label(s)}: ${entryName(e)} ${entryWhen(e)}`, amount: e.amount }],
       onConfirm: () => commit(restoreEntry(app.data!, e.id)),
     });
   }

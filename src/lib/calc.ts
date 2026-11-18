@@ -29,30 +29,39 @@ export const categoryTotal = (data: Data, categoryId: string, m: Month) => sum(c
 
 export const income = (data: Data, m: Month) => scopeTotal(data, 'income', m);
 
+/** Variable Einnahmen only count while the settings switch is on. */
+export const variableIncome = (data: Data, m: Month) => (data.variableIncome ? scopeTotal(data, 'varIncome', m) : 0);
+
 export function expenses(data: Data, m: Month): number {
   return scopeTotal(data, 'invest', m) + scopeTotal(data, 'fixed', m) + scopeTotal(data, 'expense', m);
 }
 
-export const balance = (data: Data, m: Month) => income(data, m) - expenses(data, m);
+export const balance = (data: Data, m: Month) => income(data, m) + variableIncome(data, m) - expenses(data, m);
 
 /** "Fix": what is left for variable spending = Einnahmen − Fixkosten − Investments. */
 export const budget = (data: Data, m: Month) => income(data, m) - scopeTotal(data, 'fixed', m) - scopeTotal(data, 'invest', m);
 
-/** How much of the budget the variable spending has used. */
+/** "Variabel": variable income minus variable spending. */
+export const variableTotal = (data: Data, m: Month) => variableIncome(data, m) - scopeTotal(data, 'expense', m);
+
+/** How much of the budget (plus variable income) the variable spending has used. */
 export function budgetUsage(data: Data, m: Month): { spent: number; budget: number; percent: number | null } | null {
-  if (income(data, m) === 0) return null;
-  const left = budget(data, m);
+  const extra = variableIncome(data, m);
+  if (income(data, m) === 0 && extra === 0) return null;
+  const left = budget(data, m) + extra;
   const spent = scopeTotal(data, 'expense', m);
   return { spent, budget: left, percent: left > 0 ? Math.round((spent / left) * 100) : null };
 }
 
 export function hasActivity(data: Data, m: Month): boolean {
-  return (['income', 'fixed', 'invest', 'expense'] as Scope[]).some((s) => scopeEntriesForMonth(data, s, m).length > 0);
+  const scopes: Scope[] = ['income', 'fixed', 'invest', 'expense', ...(data.variableIncome ? (['varIncome'] as Scope[]) : [])];
+  return scopes.some((s) => scopeEntriesForMonth(data, s, m).length > 0);
 }
 
-/** Profile start, moved back to the earliest expense entry so backfilled months count. */
+/** Profile start, moved back to the earliest expense (or variable income) entry so backfilled months count. */
 export function effectiveStart(data: Data): Month | undefined {
-  const firstExpense = entriesOfScope(data, 'expense')
+  const dated = [...entriesOfScope(data, 'expense'), ...(data.variableIncome ? entriesOfScope(data, 'varIncome') : [])];
+  const firstExpense = dated
     .map((e) => monthOf(e.date!))
     .sort()[0];
   if (!data.start) return undefined;

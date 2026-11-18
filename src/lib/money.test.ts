@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAmount, parseAmount } from './money';
+import { earnings, formatAmount, formatHours, parseAmount, parseHours } from './money';
 
 describe('parseAmount', () => {
   it('accepts comma and dot decimals', () => {
@@ -31,5 +31,26 @@ describe('formatAmount', () => {
   it('can show an explicit plus sign', () => {
     expect(formatAmount(128000, true)).toBe('+1280.00 €');
     expect(formatAmount(-500, true)).toBe('-5.00 €');
+  });
+});
+
+describe('hours', () => {
+  it('parses whole and decimal hours', () => {
+    expect(parseHours('5')).toBe(5);
+    expect(parseHours('1,5')).toBe(1.5);
+    expect(parseHours(' 2.25 ')).toBe(2.25);
+  });
+  it('rejects invalid input', () => {
+    expect(parseHours('')).toBeNull();
+    expect(parseHours('-1')).toBeNull();
+    expect(parseHours('1.234')).toBeNull();
+  });
+  it('formats without trailing zeros', () => {
+    expect(formatHours(5)).toBe('5 h');
+    expect(formatHours(1.5)).toBe('1.5 h');
+  });
+  it('rounds earnings to cents', () => {
+    expect(earnings(5, 1500)).toBe(7500);
+    expect(earnings(1.33, 1250)).toBe(1663);
   });
 });

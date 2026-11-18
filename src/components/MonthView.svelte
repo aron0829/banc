@@ -2,11 +2,11 @@
   import { Lock, LockOpen } from '@lucide/svelte';
   import { editCategory, editEntry } from '../lib/actions';
   import {
-    budget, budgetUsage, categoryEntriesForMonth, categoryTotal, scopeEntriesForMonth, scopeTotal,
+    budget, budgetUsage, categoryEntriesForMonth, categoryTotal, scopeEntriesForMonth, scopeTotal, variableIncome, variableTotal,
   } from '../lib/calc';
   import { visibleCategories, type Data, type Entry, type Scope } from '../lib/model';
   import { SCOPES } from '../lib/scopes';
-  import { byCategory, byGroup } from '../lib/sections';
+  import { byCategory, byCategoryAndGroup, byGroup } from '../lib/sections';
   import { ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
   import EntryList from './EntryList.svelte';
@@ -25,6 +25,8 @@
   const tap = (e: Entry) => editEntry(data, e);
 
   const usage = $derived(budgetUsage(data, m));
+  // With Variable Einnahmen switched on the Variabel card shows + and − like a small balance.
+  const withIncome = $derived(!!data.variableIncome);
   const euros = (cents: number) => `${Math.round(cents / 100)} €`;
 </script>
 
@@ -50,7 +52,34 @@
     {/each}
   </Card>
 
-  <Card title="Variable" icon={LockOpen} total={scopeTotal(data, 'expense', m)} open={!!open.variable} fill onToggle={() => toggle('variable')}>
+  <Card
+    title="Variabel"
+    icon={LockOpen}
+    total={withIncome ? variableTotal(data, m) : scopeTotal(data, 'expense', m)}
+    signed={withIncome}
+    open={!!open.variable}
+    fill
+    onToggle={() => toggle('variable')}
+  >
+    {#if withIncome}
+      <Card
+        sub
+        accent
+        tone="income"
+        title={SCOPES.income.title}
+        icon={SCOPES.varIncome.icon}
+        total={variableIncome(data, m)}
+        signed
+        open={!!open.varIncome}
+        onToggle={() => toggle('varIncome')}
+      >
+        <EntryList
+          sections={byCategoryAndGroup(data, 'varIncome', scopeEntriesForMonth(data, 'varIncome', m), editCategory)}
+          onTap={tap}
+          empty="Noch keine variablen Einnahmen – mit + und den Pfeilen hinzufügen"
+        />
+      </Card>
+    {/if}
     {#each visibleCategories(data, 'expense') as c (c.id)}
       <Card
         sub
@@ -58,7 +87,7 @@
         tone="expense"
         title={c.name}
         catIcon={c.icon}
-        total={categoryTotal(data, c.id, m)}
+        total={withIncome ? -categoryTotal(data, c.id, m) : categoryTotal(data, c.id, m)}
         open={!!open[c.id]}
         onToggle={() => toggle(c.id)}
         onLongPress={() => editCategory(c)}

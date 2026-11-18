@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Entry } from '../lib/model';
-  import { entryWhen, type ListSection } from '../lib/sections';
+  import { entryName, entryWhen, type ListSection } from '../lib/sections';
   import { longpress } from '../lib/longpress';
   import { formatAmount } from '../lib/money';
   import CatIcon from './CatIcon.svelte';
@@ -12,15 +12,15 @@
 <div class="list scroll">
   {#each sections as s (s.key)}
     {#if s.label !== undefined}
-      <button class="group no-select" onclick={s.onHeaderTap} use:longpress={s.onHeaderLongPress} disabled={!s.onHeaderLongPress && !s.onHeaderTap}>
+      <button class="group no-select" class:nested={s.nested} onclick={s.onHeaderTap} use:longpress={s.onHeaderLongPress} disabled={!s.onHeaderLongPress && !s.onHeaderTap}>
         {#if s.icon}<CatIcon name={s.icon} size={15} />{/if}
         <span class="name">{s.label}</span>
         {#if s.total !== undefined}<span class="amount">{formatAmount(s.total)}</span>{/if}
       </button>
     {/if}
     {#each s.entries as e (e.id)}
-      <button class="row" class:top={s.label === undefined} onclick={() => onTap?.(e)} disabled={!onTap}>
-        <span class="name">{e.name || '–'}</span>
+      <button class="row" class:top={s.label === undefined && !s.nested} class:deep={s.nested && s.label !== undefined} onclick={() => onTap?.(e)} disabled={!onTap}>
+        <span class="name">{entryName(e)}</span>
         <span class="when">{entryWhen(e)}</span>
         <span class="amount">{formatAmount(e.amount)}</span>
       </button>
@@ -59,6 +59,14 @@
   }
   .row {
     padding-left: 8px;
+  }
+  .group.nested {
+    padding-left: 8px;
+    font-weight: 600;
+    margin-top: 0;
+  }
+  .row.deep {
+    padding-left: 16px;
   }
   .row.top {
     padding-left: 0;

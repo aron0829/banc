@@ -17,9 +17,9 @@ export function deleteEntry(data: Data, id: string, now: string): Data {
   return updateEntry(data, id, { deleted: true, deletedAt: now });
 }
 
-export function addCategory(data: Data, scope: Scope, name: string, icon: string): Data {
+export function addCategory(data: Data, scope: Scope, name: string, icon: string, extra: Partial<Category> = {}): Data {
   const order = Math.max(-1, ...data.categories.filter((c) => c.scope === scope).map((c) => c.order)) + 1;
-  return { ...data, categories: [...data.categories, { id: uid(), scope, name, icon, order }] };
+  return { ...data, categories: [...data.categories, { ...extra, id: uid(), scope, name, icon, order }] };
 }
 
 export function updateCategory(data: Data, id: string, patch: Partial<Category>): Data {

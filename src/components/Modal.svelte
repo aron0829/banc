@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Check, Plus, Trash, X } from '@lucide/svelte';
+  import { Check, ChevronLeft, ChevronRight, Plus, Trash, X } from '@lucide/svelte';
   import type { Component, Snippet } from 'svelte';
   import type { Tone } from '../lib/scopes';
   import CatIcon from './CatIcon.svelte';
@@ -18,6 +18,7 @@
     confirmDisabled = false,
     onDelete,
     onAdd,
+    onSwitch,
     addIsMain = false,
     full = false,
     children,
@@ -36,6 +37,8 @@
     confirmDisabled?: boolean;
     onDelete?: () => void;
     onAdd?: () => void;
+    /** Arrows around the title, e.g. to switch between Ausgaben and Variable Einnahmen. */
+    onSwitch?: (direction: -1 | 1) => void;
     /** "+" becomes the big coloured button at the bottom. */
     addIsMain?: boolean;
     /** Covers the whole screen; the body takes the remaining height. */
@@ -68,7 +71,12 @@
         {/if}
       </span>
       {#if title}
-        <h2>{#if catIcon}<CatIcon name={catIcon} size={24} />{:else if icon}{@const I = icon}<I size={24} strokeWidth={1.6} />{/if}{title}</h2>
+        <div class="title">
+          {#if onSwitch}<button class="switch" aria-label="Vorherige Art" onclick={() => onSwitch(-1)}><ChevronLeft size={18} /></button>{/if}
+          <!-- with arrows the title has to fit between X and ✓, so it drops the icon -->
+          {#if onSwitch}<h2 class="compact">{title}</h2>{:else}<h2>{#if catIcon}<CatIcon name={catIcon} size={24} />{:else if icon}{@const I = icon}<I size={24} strokeWidth={1.6} />{/if}{title}</h2>{/if}
+          {#if onSwitch}<button class="switch" aria-label="Nächste Art" onclick={() => onSwitch(1)}><ChevronRight size={18} /></button>{/if}
+        </div>
       {:else}
         <span></span>
       {/if}
@@ -181,6 +189,28 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    min-width: 0;
+  }
+  .title h2 {
+    flex: 1;
+    min-width: 0;
+  }
+  h2.compact {
+    display: block;
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .switch {
+    display: inline-flex;
+    padding: 4px 0;
   }
   .head {
     display: grid;

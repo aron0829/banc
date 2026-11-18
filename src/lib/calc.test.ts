@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   balance, budgetUsage, categoryTotal, expenses, groupedEntries, hasActivity, income, isActive,
   debtEntries, effectiveStart, generalTotal, overviewCategoryTotal, overviewMonths, overviewTotal, ownYearResult, previousYears,
-  scopeTotal, yearSummaryTotal,
+  scopeTotal, variableIncome, variableTotal, yearSummaryTotal,
 } from './calc';
 import type { Category, Data, Entry, Scope } from './model';
 
@@ -181,5 +181,38 @@ describe('backfilled months', () => {
     expect(overviewMonths(d, 2026, '2026-10-27').map((m) => m.month)).toEqual([
       '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10',
     ]);
+  });
+});
+
+describe('variable income', () => {
+  const d = base();
+  d.categories.push(cat('oper', 'varIncome', { rate: 1500 }));
+  d.entries = [
+    entry('job', 100000, { from: '2026-10', to: null }),
+    entry('wohnen', 40000, { from: '2026-10', to: null }),
+    entry('essen', 30000, { date: '2026-10-03' }),
+    entry('oper', 7500, { date: '2026-10-25', hours: 5 }),
+    entry('oper', 1500, { date: '2026-11-01', hours: 1 }), // other month
+  ];
+  const on: Data = { ...d, variableIncome: true };
+
+  it('does not count while switched off', () => {
+    expect(variableIncome(d, '2026-10')).toBe(0);
+    expect(balance(d, '2026-10')).toBe(30000);
+  });
+  it('adds to the month balance when switched on', () => {
+    expect(variableIncome(on, '2026-10')).toBe(7500);
+    expect(balance(on, '2026-10')).toBe(37500);
+  });
+  it('Variabel = variable income − variable spending', () => {
+    expect(variableTotal(on, '2026-10')).toBe(-22500);
+  });
+  it('raises the budget the spending is measured against', () => {
+    expect(budgetUsage(on, '2026-10')).toEqual({ spent: 30000, budget: 67500, percent: 44 });
+  });
+  it('makes a month without other entries active', () => {
+    const only: Data = { ...on, entries: [entry('oper', 1500, { date: '2026-12-01', hours: 1 })] };
+    expect(hasActivity(only, '2026-12')).toBe(true);
+    expect(hasActivity({ ...only, variableIncome: false }, '2026-12')).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { BanknoteArrowDown, BanknoteArrowUp, Lock, ScrollText, Sprout } from '@lucide/svelte';
+import { BanknoteArrowDown, BanknoteArrowUp, CircleDollarSign, Lock, ScrollText, Sprout } from '@lucide/svelte';
 import type { Component } from 'svelte';
 import type { Scope } from './model';
 
@@ -9,5 +9,6 @@ export const SCOPES: Record<Scope, { title: string; icon: Component; tone: Tone 
   fixed: { title: 'Fixkosten', icon: Lock, tone: 'expense' },
   invest: { title: 'Investments', icon: Sprout, tone: 'expense' },
   expense: { title: 'Ausgaben', icon: BanknoteArrowDown, tone: 'expense' },
+  varIncome: { title: 'Variable Einnahmen', icon: CircleDollarSign, tone: 'income' },
   overview: { title: 'Übersicht', icon: ScrollText, tone: 'neutral' },
 };

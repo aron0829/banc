@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { LogOut, Moon, RefreshCw, SlidersHorizontal, Sun, ToggleLeft, Trash, User } from '@lucide/svelte';
+  import { LogOut, Moon, RefreshCw, SlidersHorizontal, Trash, User } from '@lucide/svelte';
   import type { Component } from 'svelte';
   import type { Scope } from '../../lib/model';
   import { SCOPES, type Tone } from '../../lib/scopes';
-  import { app, logout } from '../../lib/sync.svelte';
+  import { app, commit, logout } from '../../lib/sync.svelte';
   import { closeAllPopups, closePopup, currentTheme, openPopup, setTheme, type Theme } from '../../lib/ui.svelte';
   import Modal from '../Modal.svelte';
+  import Switch from '../Switch.svelte';
   import RecurringSettings from './RecurringSettings.svelte';
   import TrashPopup from './TrashPopup.svelte';
 
   let theme = $state<Theme>(currentTheme());
+  const VarIcon = SCOPES.varIncome.icon;
 
   const sections: { scope: Scope; tone: Tone }[] = [
     { scope: 'income', tone: 'income' },
@@ -20,6 +22,11 @@
   function choose(t: Theme) {
     theme = t;
     setTheme(t);
+  }
+
+  /** Synced with the profile, so every device shows the same month results. */
+  function setVariableIncome(on: boolean) {
+    if (app.data) commit({ ...app.data, variableIncome: on });
   }
 
   async function signOut() {
@@ -41,9 +48,12 @@
   {/each}
   {@render row(Trash, 'Papierkorb', 'neutral', () => openPopup(TrashPopup, {}))}
   <div class="row neutral">
-    <ToggleLeft size={18} strokeWidth={1.6} /><span>Modus</span>
-    <button class="mode" class:on={theme === 'light'} aria-label="Hell" aria-pressed={theme === 'light'} onclick={() => choose('light')}><Sun size={17} strokeWidth={1.6} /></button>
-    <button class="mode" class:on={theme === 'dark'} aria-label="Dunkel" aria-pressed={theme === 'dark'} onclick={() => choose('dark')}><Moon size={17} strokeWidth={1.6} /></button>
+    <VarIcon size={18} strokeWidth={1.6} /><span>{SCOPES.varIncome.title}</span>
+    <Switch label={SCOPES.varIncome.title} on={!!app.data?.variableIncome} onchange={setVariableIncome} />
+  </div>
+  <div class="row neutral">
+    <Moon size={18} strokeWidth={1.6} /><span>Modus</span>
+    <Switch label="Dunkler Modus" on={theme === 'dark'} onchange={(on) => choose(on ? 'dark' : 'light')} />
   </div>
   <button class="row neutral" onclick={signOut}>
     <User size={18} strokeWidth={1.6} /><span>Profil: {app.profile}</span><LogOut size={20} strokeWidth={1.6} />
@@ -71,17 +81,5 @@
   }
   .row.expense {
     border-color: var(--expense);
-  }
-  .mode {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid transparent;
-  }
-  .mode.on {
-    border-color: var(--frame);
   }
 </style>

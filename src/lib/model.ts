@@ -1,6 +1,7 @@
 import type { Day, Month } from './dates';
 
-export type Scope = 'income' | 'fixed' | 'invest' | 'expense' | 'overview';
+/** varIncome: "Variable Einnahmen", one-off entries paid by the hour (only counted while switched on in the settings). */
+export type Scope = 'income' | 'fixed' | 'invest' | 'expense' | 'varIncome' | 'overview';
 export const RECURRING: Scope[] = ['income', 'fixed', 'invest'];
 
 /** Special overview categories: "Zusätzliche Einnahmen" (always +), "Zusätzliche Ausgaben" (always −), Schulden (not counted). */
@@ -13,6 +14,8 @@ export interface Category {
   icon: string;
   requiresGroup?: boolean;
   kind?: Kind;
+  /** Variable Einnahmen: Stundenlohn in cents per hour. */
+  rate?: number;
   order: number;
   deleted?: boolean;
   deletedAt?: string;
@@ -37,8 +40,10 @@ export interface Entry {
   from?: Month;
   /** null = Unbegrenzt */
   to?: Month | null;
-  /** One-off entries (expense/overview). */
+  /** One-off entries (expense/varIncome/overview). */
   date?: Day;
+  /** Variable Einnahmen: worked hours; amount = hours × Stundenlohn at the time of saving. */
+  hours?: number;
   deleted?: boolean;
   deletedAt?: string;
 }
@@ -46,6 +51,8 @@ export interface Entry {
 export interface Data {
   /** First month the profile was used; earlier months don't count in the overview. */
   start?: Month;
+  /** Settings switch "Variable Einnahmen". */
+  variableIncome?: boolean;
   categories: Category[];
   groups: Group[];
   entries: Entry[];

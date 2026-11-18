@@ -17,3 +17,17 @@ export function formatAmount(cents: number, plusSign = false): string {
 export function amountInput(cents: number): string {
   return (cents / 100).toFixed(2);
 }
+
+/** Parses hours like "5", "1,5", "2.25". Returns null if invalid. */
+export function parseHours(input: string): number | null {
+  const m = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(input.trim());
+  return m ? Number(`${m[1]}.${m[2] ?? '0'}`) : null;
+}
+
+/** 1.5 → "1.5 h", 5 → "5 h". */
+export function formatHours(hours: number): string {
+  return `${Number(hours.toFixed(2))} h`;
+}
+
+/** Earnings in cents for worked hours at a rate in cents per hour. */
+export const earnings = (hours: number, rate: number) => Math.round(hours * rate);

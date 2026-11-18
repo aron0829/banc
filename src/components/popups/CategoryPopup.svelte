@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { LayoutGrid, Plus, SquarePen, Tag, Trash } from '@lucide/svelte';
+  import { HandCoins, LayoutGrid, Plus, SquarePen, Tag, Trash } from '@lucide/svelte';
   import { ICON_NAMES } from '../../lib/icons';
   import type { Category, Scope } from '../../lib/model';
+  import { amountInput, parseAmount } from '../../lib/money';
   import { addCategory, deleteCategory, updateCategory } from '../../lib/ops';
   import { SCOPES } from '../../lib/scopes';
   import { app, commit } from '../../lib/sync.svelte';
@@ -17,17 +18,25 @@
   let name = $state(category?.name ?? '');
   // svelte-ignore state_referenced_locally
   let icon = $state(category?.icon ?? ICON_NAMES[0]);
+  // svelte-ignore state_referenced_locally
+  let rateText = $state(category?.rate != null ? amountInput(category.rate) : '');
   const tone = $derived(SCOPES[scope].tone);
+  // Variable Einnahmen are paid by the hour
+  const hourly = $derived(scope === 'varIncome');
+  const rate = $derived(parseAmount(rateText));
+  const rateOk = $derived(!hourly || (rate !== null && rate >= 0));
+  const valid = $derived(!!name.trim() && rateOk);
 
   function save() {
     const n = name.trim();
-    if (!n) return;
+    if (!valid) return;
+    const extra = hourly ? { rate: rate! } : {};
     if (category) {
-      commit(updateCategory(app.data!, category.id, { name: n, icon }));
+      commit(updateCategory(app.data!, category.id, { name: n, icon, ...extra }));
       closePopup();
       return;
     }
-    const next = addCategory(app.data!, scope, n, icon);
+    const next = addCategory(app.data!, scope, n, icon, extra);
     commit(next);
     closePopup();
     onCreated?.(next.categories[next.categories.length - 1].id);
@@ -57,12 +66,17 @@
   subtitleIcon={category ? SquarePen : Plus}
   onCancel={closePopup}
   onConfirm={save}
-  confirmDisabled={!name.trim()}
+  confirmDisabled={!valid}
   onDelete={category ? remove : undefined}
 >
   <Field icon={Tag} label="Name" {tone}>
-    <input bind:value={name} aria-label="Name" placeholder="z. B. Kino" />
+    <input bind:value={name} aria-label="Name" placeholder={hourly ? 'z. B. Oper' : 'z. B. Kino'} />
   </Field>
+  {#if hourly}
+    <Field icon={HandCoins} label="Stundenlohn" {tone} invalid={rateText !== '' && !rateOk}>
+      <input bind:value={rateText} inputmode="decimal" placeholder="0.00" aria-label="Stundenlohn" class="rate" />&nbsp;€/h
+    </Field>
+  {/if}
   <Field icon={LayoutGrid} label="Icons" {tone} block>
     {#snippet below()}
       <div class="grid scroll">
@@ -77,6 +91,9 @@
 </Modal>
 
 <style>
+  .rate {
+    max-width: 120px;
+  }
   .grid {
     display: grid;
     grid-template-columns: repeat(5, 38px);

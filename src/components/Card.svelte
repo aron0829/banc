@@ -15,6 +15,7 @@
     accent = false,
     open = true,
     fill = false,
+    signed = false,
     onToggle,
     onLongPress,
     children,
@@ -30,6 +31,8 @@
     open?: boolean;
     /** Takes the remaining height when open; the body scrolls instead of the page. */
     fill?: boolean;
+    /** Shows "+" for positive totals (Variabel with variable income). */
+    signed?: boolean;
     onToggle?: () => void;
     onLongPress?: () => void;
     children?: Snippet;
@@ -43,7 +46,7 @@
     </span>
     <span class="title">{title}</span>
     {#if total !== undefined}
-      <span class="total amount">{formatAmount(total)}</span>
+      <span class="total amount">{formatAmount(total, signed)}</span>
     {/if}
   </button>
   {#if open && children}
